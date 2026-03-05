@@ -2,7 +2,7 @@
 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
 ## minimemo
-local tiny desktop memos without annoying advertisements
+tiny local desktop memos without annoying ads
 
 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
