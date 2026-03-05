@@ -5,6 +5,7 @@ const path = require("path")
 const note = document.getElementById("note")
 const newNoteBtn = document.getElementById("new-note")
 const colorPicker = document.getElementById("color-picker")
+const opacitySlider = document.getElementById("opacity-slider")
 const settingsToggle = document.getElementById("settings-toggle")
 const closeNoteBtn = document.getElementById("close-note")
 const settingsPanel = document.getElementById("settings-panel")
@@ -36,26 +37,40 @@ function saveStore(store) {
   fs.writeFileSync(STORE, JSON.stringify(store))
 }
 
-const COLOR_MAP = {
-  purple: "rgba(200,180,255,.85)",
-  yellow: "rgba(255,252,180,.9)",
-  blue: "rgba(180,220,255,.85)",
-  green: "rgba(195,245200,.9)",
-  pink: "rgba(255,200,230,.9)"
+const LEGACY_COLOR_MAP = {
+  purple: "#c8b4ff",
+  yellow: "#fffcb4",
+  blue: "#b4dcff",
+  green: "#c3f5c8",
+  pink: "#ffc8e6"
 }
 
-function applyColor(colorKey) {
-  const color = COLOR_MAP[colorKey] || COLOR_MAP.purple
-  document.body.style.setProperty("--note-bg", color)
+function hexToRgb(hex) {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!match) return { r: 200, g: 180, b: 255 }
+  return {
+    r: parseInt(match[1], 16),
+    g: parseInt(match[2], 16),
+    b: parseInt(match[3], 16)
+  }
+}
+
+function applyColorAndOpacity(colorHex, opacity) {
+  const { r, g, b } = hexToRgb(colorHex)
+  const alpha = typeof opacity === "number" ? opacity : 0.85
+  document.body.style.setProperty("--note-bg", `rgba(${r},${g},${b},${alpha})`)
 }
 
 function saveCurrentNote() {
   const store = loadStore()
   const current = store[noteId] || {}
+  const colorHex = colorPicker.value || current.color || "#c8b4ff"
+  const opacity = parseFloat(opacitySlider.value || current.opacity || 0.85)
   store[noteId] = {
     ...current,
     content: note.innerHTML,
-    color: colorPicker.value || current.color || "purple"
+    color: colorHex,
+    opacity
   }
   saveStore(store)
 }
@@ -63,16 +78,23 @@ function saveCurrentNote() {
 ;(function restore() {
   const store = loadStore()
   const current = store[noteId]
+  let color = current?.color
+  let opacity = typeof current?.opacity === "number" ? current.opacity : 0.85
+
+  if (color && LEGACY_COLOR_MAP[color]) {
+    color = LEGACY_COLOR_MAP[color]
+  }
+  if (!color || !/^#([0-9a-fA-F]{6})$/.test(color)) {
+    color = "#c8b4ff"
+  }
+
   if (current?.content) {
     note.innerHTML = current.content
   }
-  if (current?.color && COLOR_MAP[current.color]) {
-    colorPicker.value = current.color
-    applyColor(current.color)
-  } else {
-    colorPicker.value = "purple"
-    applyColor("purple")
-  }
+
+  colorPicker.value = color
+  opacitySlider.value = opacity.toString()
+  applyColorAndOpacity(color, opacity)
 })()
 
 note.oninput = () => {
@@ -80,7 +102,12 @@ note.oninput = () => {
 }
 
 colorPicker.onchange = () => {
-  applyColor(colorPicker.value)
+  applyColorAndOpacity(colorPicker.value, parseFloat(opacitySlider.value || "0.85"))
+  saveCurrentNote()
+}
+
+opacitySlider.oninput = () => {
+  applyColorAndOpacity(colorPicker.value, parseFloat(opacitySlider.value || "0.85"))
   saveCurrentNote()
 }
 

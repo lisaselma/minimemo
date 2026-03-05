@@ -3,7 +3,7 @@ const fs = require("fs")
 const path = require("path")
 
 const STORE = path.join(app.getPath("userData"), "notes.json")
-const ICON = path.join(__dirname, "..", "..", "assets", "images", "jupiter_lamb.png")
+const ICON = path.join(__dirname, "..", "..", "assets", "images", "bok.png")
 let windows = []
 
 function createNote(bounds, id) {

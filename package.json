@@ -10,11 +10,11 @@
     "productName": "minimemo",
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "assets/images/jupiter_lamb.png"
+      "icon": "assets/images/bok.png"
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/images/jupiter_lamb.png"
+      "icon": "assets/images/bok.png"
     }
   },
   "devDependencies": {
