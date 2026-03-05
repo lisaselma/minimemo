@@ -5,27 +5,76 @@
 </head>
 <body>
   <div id="toolbar">
-    <span class="window-title">minimemo</span>
-    <div class="toolbar-spacer"></div>
-    <div class="toolbar-buttons">
+    <div class="toolbar-buttons toolbar-buttons-left">
       <button id="new-note" title="New memo">+</button>
-      <button id="settings-toggle" title="Color settings">i</button>
-      <button id="close-note" title="Close memo">×</button>
+      <button id="settings-toggle" title="Settings">i</button>
     </div>
+    <button type="button" id="overview-btn" class="toolbar-btn-overview" title="Memo overview">
+      <img src="../../assets/images/bok.png" alt="" class="header-icon" />
+      <span class="window-title">minimemo</span>
+    </button>
+    <div class="toolbar-spacer"></div>
+    <button id="close-note" title="Close memo">×</button>
   </div>
   <div id="settings-panel">
-    <label class="field">
-      Color:
-      <input type="color" id="color-picker" title="Memo color" />
-    </label>
-    <div class="field">
-      <label for="font-color-picker">Text:</label>
-      <input type="color" id="font-color-picker">
+    <div class="settings-section collapsed" data-section="appearance">
+      <button type="button" class="settings-section-toggle" aria-expanded="false">
+        <span class="settings-section-label">Appearance</span>
+        <span class="settings-section-chevron"></span>
+      </button>
+      <div class="settings-row">
+        <label class="field"><span class="field-label">Background</span>
+          <input type="color" id="color-picker" title="Memo color" />
+        </label>
+        <label class="field"><span class="field-label">Transparency</span>
+          <input type="range" id="opacity-slider" min="0.3" max="1" step="0.05" />
+        </label>
+      </div>
     </div>
-    <label class="field">
-      Transparency:
-      <input type="range" id="opacity-slider" min="0.3" max="1" step="0.05" />
-    </label>
+    <div class="settings-section collapsed" data-section="text">
+      <button type="button" class="settings-section-toggle" aria-expanded="false">
+        <span class="settings-section-label">Text</span>
+        <span class="settings-section-chevron"></span>
+      </button>
+      <div class="settings-row">
+        <label class="field"><span class="field-label">Text color</span>
+          <input type="color" id="font-color-picker" />
+        </label>
+        <label class="field"><span class="field-label">Font</span>
+          <select id="font-family-picker">
+            <option value="system-ui">System</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Palatino">Palatino</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Caviar Dreams, sans-serif">Caviar Dreams</option>
+            <option value="Helvetica">Helvetica</option>
+            <option value="Arial">Arial</option>
+            <option value="monospace">Monospace</option>
+          </select>
+        </label>
+        <label class="field"><span class="field-label">Size</span>
+          <select id="font-size-picker">
+            <option value="12">12</option>
+            <option value="14" selected>14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="24">24</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="settings-section collapsed" data-section="lists">
+      <button type="button" class="settings-section-toggle" aria-expanded="false">
+        <span class="settings-section-label">Lists</span>
+        <span class="settings-section-chevron"></span>
+      </button>
+      <div class="settings-row">
+        <button type="button" id="insert-bullet-list" title="Bullet list">• List</button>
+        <button type="button" id="insert-numbered-list" title="Numbered list">1. List</button>
+        <button type="button" id="insert-checklist" title="Checklist">☐ Checklist</button>
+      </div>
+    </div>
   </div>
   <div id="note" contenteditable="true"></div>
   <script src="renderer.js"></script>

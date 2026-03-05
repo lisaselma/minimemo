@@ -6,6 +6,34 @@ const STORE = path.join(app.getPath("userData"), "notes.json")
 const ICON = path.join(__dirname, "..", "..", "assets", "images", "bok.png")
 
 let windows = []
+let overviewWindow = null
+
+function openOverview() {
+  if (overviewWindow && !overviewWindow.isDestroyed()) {
+    overviewWindow.focus()
+    return
+  }
+  overviewWindow = new BrowserWindow({
+    width: 320,
+    height: 380,
+    resizable: true,
+    minimizable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  })
+  overviewWindow.loadFile(path.join(__dirname, "../renderer/overview.html"))
+  overviewWindow.on("closed", () => {
+    overviewWindow = null
+  })
+}
+
+function notifyOverviewListChanged() {
+  if (overviewWindow && !overviewWindow.isDestroyed()) {
+    overviewWindow.webContents.send("memo-list-changed")
+  }
+}
 
 function createNote(bounds = {}, id) {
   const win = new BrowserWindow({
@@ -48,6 +76,7 @@ function createNote(bounds = {}, id) {
 
   win.on("closed", () => {
     windows = windows.filter(w => w !== win)
+    notifyOverviewListChanged()
   })
 
   return win
@@ -102,6 +131,25 @@ app.whenReady().then(() => {
 
 ipcMain.on("create-new-note", () => {
   createNote()
+  notifyOverviewListChanged()
+})
+
+ipcMain.handle("get-memo-windows", () => {
+  return windows
+    .filter(w => !w.isDestroyed())
+    .map(w => ({ id: w.noteId, visible: w.isVisible() }))
+})
+
+ipcMain.on("set-memo-visible", (_, id, visible) => {
+  const w = windows.find(x => !x.isDestroyed() && x.noteId === id)
+  if (w) {
+    if (visible) w.show()
+    else w.hide()
+  }
+})
+
+ipcMain.on("open-overview", () => {
+  openOverview()
 })
 
 app.on("before-quit", saveAllNotes)

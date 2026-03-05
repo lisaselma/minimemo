@@ -10,12 +10,21 @@ const settingsToggle = document.getElementById("settings-toggle")
 const closeNoteBtn = document.getElementById("close-note")
 const settingsPanel = document.getElementById("settings-panel")
 const fontColorPicker = document.getElementById("font-color-picker")
+const fontFamilyPicker = document.getElementById("font-family-picker")
+const fontSizePicker = document.getElementById("font-size-picker")
+const insertBulletListBtn = document.getElementById("insert-bullet-list")
+const insertNumberedListBtn = document.getElementById("insert-numbered-list")
+const insertChecklistBtn = document.getElementById("insert-checklist")
+const overviewBtn = document.getElementById("overview-btn")
 
 const urlParams = new URLSearchParams(window.location.search)
 const noteId = urlParams.get("id") || "default"
 
 const STORE_DIR = path.join(__dirname, "..", "..", "data")
 const STORE = path.join(STORE_DIR, "memo.json")
+
+const DEFAULT_NOTE_COLOR = "#ffffff"
+const DEFAULT_NOTE_OPACITY = 0.9
 
 function ensureStoreDir() {
   if (!fs.existsSync(STORE_DIR)) {
@@ -48,7 +57,7 @@ const LEGACY_COLOR_MAP = {
 
 function hexToRgb(hex) {
   const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!match) return { r: 200, g: 180, b: 255 }
+  if (!match) return { r: 255, g: 255, b: 255 }
   return {
     r: parseInt(match[1], 16),
     g: parseInt(match[2], 16),
@@ -58,24 +67,148 @@ function hexToRgb(hex) {
 
 function applyColorAndOpacity(colorHex, opacity) {
   const { r, g, b } = hexToRgb(colorHex)
-  const alpha = Number.isFinite(opacity) && opacity >= 0 && opacity <= 1 ? opacity : 0.85
+  let alpha = Number(opacity)
+  if (!Number.isFinite(alpha) || alpha < 0.3 || alpha > 1) alpha = DEFAULT_NOTE_OPACITY
   document.body.style.setProperty("--note-bg", `rgba(${r},${g},${b},${alpha})`)
+}
+
+function applyFontToSelectionOrNote(fontFamily, fontSize) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) {
+    note.style.fontFamily = fontFamily
+    note.style.fontSize = fontSize + "px"
+    saveCurrentNote()
+    return
+  }
+  const range = sel.getRangeAt(0)
+  if (!note.contains(sel.anchorNode) || !note.contains(sel.focusNode)) {
+    note.style.fontFamily = fontFamily
+    note.style.fontSize = fontSize + "px"
+    saveCurrentNote()
+    return
+  }
+  if (range.collapsed) {
+    note.style.fontFamily = fontFamily
+    note.style.fontSize = fontSize + "px"
+    saveCurrentNote()
+    return
+  }
+  try {
+    const contents = range.extractContents()
+    const span = document.createElement("span")
+    span.style.fontFamily = fontFamily
+    span.style.fontSize = fontSize + "px"
+    span.appendChild(contents)
+    range.insertNode(span)
+    sel.removeAllRanges()
+    const newRange = document.createRange()
+    newRange.selectNodeContents(span)
+    sel.addRange(newRange)
+  } catch (_) {
+    note.style.fontFamily = fontFamily
+    note.style.fontSize = fontSize + "px"
+  }
+  saveCurrentNote()
+}
+
+function applyTextColorToSelectionOrNote(colorHex) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) {
+    note.style.color = colorHex
+    saveCurrentNote()
+    return
+  }
+  const range = sel.getRangeAt(0)
+  if (!note.contains(sel.anchorNode) || !note.contains(sel.focusNode)) {
+    note.style.color = colorHex
+    saveCurrentNote()
+    return
+  }
+  if (range.collapsed) {
+    note.style.color = colorHex
+    saveCurrentNote()
+    return
+  }
+  try {
+    const contents = range.extractContents()
+    const span = document.createElement("span")
+    span.style.color = colorHex
+    span.appendChild(contents)
+    range.insertNode(span)
+    sel.removeAllRanges()
+    const newRange = document.createRange()
+    newRange.selectNodeContents(span)
+    sel.addRange(newRange)
+  } catch (_) {
+    note.style.color = colorHex
+  }
+  saveCurrentNote()
+}
+
+function insertList(type) {
+  note.focus()
+  if (type === "bullet") {
+    document.execCommand("insertUnorderedList", false, null)
+  } else if (type === "numbered") {
+    document.execCommand("insertOrderedList", false, null)
+  }
+  saveCurrentNote()
+}
+
+function insertChecklist() {
+  note.focus()
+  const sel = window.getSelection()
+  let range = sel && sel.rangeCount ? sel.getRangeAt(0) : null
+  if (!range || !note.contains(sel.anchorNode)) {
+    range = document.createRange()
+    range.selectNodeContents(note)
+    range.collapse(true)
+    if (sel) sel.removeAllRanges()
+    if (sel) sel.addRange(range)
+  }
+  const span = document.createElement("span")
+  span.className = "checklist-box"
+  span.contentEditable = "false"
+  span.textContent = "☐"
+  span.dataset.checked = "false"
+  range.insertNode(span)
+  const space = document.createTextNode("\u00A0")
+  range.setStartAfter(span)
+  range.insertNode(space)
+  range.setStartAfter(space)
+  range.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(range)
+  saveCurrentNote()
+}
+
+function toggleChecklistBox(box) {
+  if (!box || !box.classList.contains("checklist-box")) return
+  const checked = box.dataset.checked === "true"
+  box.textContent = checked ? "☐" : "☑"
+  box.dataset.checked = checked ? "false" : "true"
+  saveCurrentNote()
 }
 
 function saveCurrentNote() {
   const store = loadStore()
   const current = store[noteId] || {}
 
-  const colorHex = colorPicker.value || current.color || "#c8b4ff"
-  const opacity = parseFloat(opacitySlider.value || current.opacity || 0.85)
+  const colorHex = colorPicker.value || current.color || DEFAULT_NOTE_COLOR
+  const rawSlider = parseFloat(opacitySlider.value)
+  const opacity = Number.isFinite(rawSlider) ? Math.max(0.3, Math.min(1, 1.3 - rawSlider)) : DEFAULT_NOTE_OPACITY
   const fontColor = fontColorPicker.value || current.fontColor || "#000000"
+  const fontFamily = fontFamilyPicker?.value || current.fontFamily || "system-ui"
+  const fontSize = fontSizePicker?.value || current.fontSize || "14"
 
   store[noteId] = {
     ...current,
     content: note.innerHTML,
     color: colorHex,
-    opacity,
-    fontColor
+    opacity: Math.max(0.3, Math.min(1, opacity)),
+    fontColor,
+    fontFamily,
+    fontSize
   }
 
   saveStore(store)
@@ -85,34 +218,48 @@ function saveCurrentNote() {
   const store = loadStore()
   const current = store[noteId]
 
+  const isNewNote = !current
   let color = current?.color
-  let opacity = parseFloat(current?.opacity) || 0.85
-  if (Number.isNaN(opacity) || opacity < 0.3 || opacity > 1) opacity = 0.85
+  let opacity = parseFloat(current?.opacity)
+  if (isNewNote || Number.isNaN(opacity) || opacity < 0.3 || opacity > 1) {
+    opacity = DEFAULT_NOTE_OPACITY
+  }
   const fontColor = current?.fontColor || "#000000"
+  const fontFamily = current?.fontFamily || "system-ui"
+  const fontSize = current?.fontSize || "14"
 
   if (color && LEGACY_COLOR_MAP[color]) {
     color = LEGACY_COLOR_MAP[color]
   }
 
-  if (!color || !/^#([0-9a-fA-F]{6})$/.test(color)) {
-    color = "#c8b4ff"
+  if (isNewNote || !color || !/^#([0-9a-fA-F]{6})$/.test(color)) {
+    color = DEFAULT_NOTE_COLOR
   }
 
   if (current?.content) {
     note.innerHTML = current.content
   }
 
+  note.querySelectorAll(".checklist-box").forEach((box) => {
+    box.dataset.checked = box.textContent.trim() === "☑" ? "true" : "false"
+  })
+
   colorPicker.value = color
-  opacitySlider.value = String(opacity)
+  const sliderVal = 1.3 - opacity
+  opacitySlider.value = String(Math.max(0.3, Math.min(1, sliderVal)))
   fontColorPicker.value = fontColor
+  if (fontFamilyPicker) fontFamilyPicker.value = fontFamily
+  if (fontSizePicker) fontSizePicker.value = fontSize
 
   applyColorAndOpacity(color, opacity)
   note.style.color = fontColor
+  note.style.fontFamily = fontFamily
+  note.style.fontSize = fontSize + "px"
 })()
 
 /* ===== Events ===== */
 
-const toolbarButtons = document.querySelector(".toolbar-buttons")
+const toolbarButtons = document.querySelector(".toolbar-buttons-left")
 if (toolbarButtons) {
   toolbarButtons.addEventListener("mousedown", (e) => {
     e.stopPropagation()
@@ -122,31 +269,80 @@ if (toolbarButtons) {
 note.oninput = saveCurrentNote
 
 colorPicker.onchange = () => {
-  applyColorAndOpacity(
-    colorPicker.value,
-    parseFloat(opacitySlider.value || "0.85")
-  )
+  const raw = parseFloat(opacitySlider.value)
+  const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
+  applyColorAndOpacity(colorPicker.value, opacity)
   saveCurrentNote()
 }
 
 opacitySlider.oninput = () => {
-  const opacity = parseFloat(opacitySlider.value) || 0.85
+  const raw = parseFloat(opacitySlider.value)
+  const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
   applyColorAndOpacity(colorPicker.value, opacity)
   saveCurrentNote()
 }
 
 fontColorPicker.oninput = () => {
-  note.style.color = fontColorPicker.value
-  saveCurrentNote()
+  applyTextColorToSelectionOrNote(fontColorPicker.value)
 }
+
+if (fontFamilyPicker) {
+  fontFamilyPicker.onchange = () => {
+    const font = fontFamilyPicker.value
+    const size = fontSizePicker ? fontSizePicker.value + "px" : "14px"
+    applyFontToSelectionOrNote(font, fontSizePicker ? fontSizePicker.value : "14")
+  }
+}
+
+if (fontSizePicker) {
+  fontSizePicker.onchange = () => {
+    const size = fontSizePicker.value
+    const font = fontFamilyPicker ? fontFamilyPicker.value : "system-ui"
+    applyFontToSelectionOrNote(font, size)
+  }
+}
+
+if (insertBulletListBtn) {
+  insertBulletListBtn.onclick = () => insertList("bullet")
+}
+if (insertNumberedListBtn) {
+  insertNumberedListBtn.onclick = () => insertList("numbered")
+}
+if (insertChecklistBtn) {
+  insertChecklistBtn.onclick = insertChecklist
+}
+
+note.addEventListener("click", (e) => {
+  const box = e.target.classList && e.target.classList.contains("checklist-box") ? e.target : null
+  if (box) {
+    e.preventDefault()
+    toggleChecklistBox(box)
+  }
+})
 
 newNoteBtn.onclick = () => {
   ipcRenderer.send("create-new-note")
 }
 
+if (overviewBtn) {
+  overviewBtn.onclick = () => {
+    ipcRenderer.send("open-overview")
+  }
+}
+
 settingsToggle.onclick = () => {
   settingsPanel.classList.toggle("open")
 }
+
+settingsPanel.addEventListener("click", (e) => {
+  const toggle = e.target.closest(".settings-section-toggle")
+  if (!toggle) return
+  const section = toggle.closest(".settings-section")
+  if (!section) return
+  section.classList.toggle("collapsed")
+  const expanded = !section.classList.contains("collapsed")
+  toggle.setAttribute("aria-expanded", String(expanded))
+})
 
 closeNoteBtn.onclick = () => {
   window.close()
