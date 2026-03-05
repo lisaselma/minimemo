@@ -42,14 +42,22 @@ function createNote(bounds, id) {
 
   win.on("close", saveAllNotes)
   windows.push(win)
+
+  win.on("closed", () => {
+    windows = windows.filter(w => w !== win)
+  })
+
   return win
 }
 
 function saveAllNotes() {
-  const data = windows.map(w => ({
+  const aliveWindows = windows.filter(w => !w.isDestroyed())
+
+  const data = aliveWindows.map(w => ({
     id: w.noteId,
     bounds: w.getBounds()
   }))
+
   fs.writeFileSync(STORE, JSON.stringify(data))
 }
 
