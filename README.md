@@ -1,6 +1,5 @@
 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
 ## minimemo
 local tiny desktop memos without annoying advertisements
@@ -20,4 +19,4 @@ npm start
 - `data` – saved memos (JSON) 🐑
 
 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
