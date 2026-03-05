@@ -1,0 +1,115 @@
+body {
+  --note-bg: rgba(200,180,255,.85);
+
+  margin: 0;
+  background: var(--note-bg);
+  border-radius: 16px;
+  backdrop-filter: blur(18px);
+
+  -webkit-app-region: drag;
+  font-family: system-ui;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 10px;
+  gap: 8px;
+
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 16px 16px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+
+  /* Drag the memo by grabbing the top bar */
+  -webkit-app-region: drag;
+}
+
+#new-note {
+  border: none;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-app-region: no-drag;
+}
+
+#new-note:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#settings-toggle {
+  border: none;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-app-region: no-drag;
+}
+
+#settings-toggle:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#close-note {
+  border: none;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  background: rgba(255, 80, 80, 0.85);
+  color: white;
+  margin-left: auto;
+  -webkit-app-region: no-drag;
+}
+
+#close-note:hover {
+  background: rgba(255, 40, 40, 0.95);
+}
+
+#settings-panel {
+  padding: 4px 12px 6px 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+
+  -webkit-app-region: no-drag;
+}
+
+#color-picker {
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+#note {
+  padding: 10px 14px 14px 14px;
+  outline: none;
+  font-family: system-ui;
+  height: auto;
+  flex: 1;
+
+  -webkit-app-region: no-drag;
+  overflow: auto;
+}
+

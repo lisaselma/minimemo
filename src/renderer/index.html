@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toolbar">
+    <button id="new-note" title="New memo">+</button>
+    <button id="settings-toggle" title="Settings">⚙</button>
+    <button id="close-note" title="Close memo">×</button>
+  </div>
+  <div id="settings-panel">
+    <label>
+      Color:
+      <select id="color-picker" title="Memo color">
+        <option value="purple">Purple</option>
+        <option value="yellow">Yellow</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+        <option value="pink">Pink</option>
+      </select>
+    </label>
+  </div>
+  <div id="note" contenteditable="true"></div>
+  <script src="renderer.js"></script>
+</body>
+</html>
+
