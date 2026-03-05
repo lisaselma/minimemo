@@ -3,8 +3,9 @@ body {
 
   margin: 0;
   background: var(--note-bg);
-  border-radius: 10px;
-  backdrop-filter: blur(18px);
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   -webkit-app-region: drag;
   font-family: "Caviar Dreams", system-ui, -apple-system, sans-serif;
@@ -17,107 +18,66 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 6px 10px;
-  gap: 8px;
+  padding: 4px 8px;
+  gap: 6px;
 
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 10px 10px 0 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  background: #e6e6e6;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #d0d0d0;
 
   /* Drag the memo by grabbing the top bar */
   -webkit-app-region: drag;
 }
 
-#new-note {
-  border: none;
-  border-radius: 999px;
-  width: 22px;
+button {
+  border: 1px solid #b8b8b8;
+  border-radius: 3px;
+  padding: 0 6px;
+  min-width: 22px;
   height: 22px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.7);
+  background: #f5f5f5;
+  color: #222;
   -webkit-app-region: no-drag;
 }
 
-#new-note:hover {
-  background: rgba(255, 255, 255, 0.9);
+button:hover {
+  background: #ffffff;
+}
+
+button:active {
+  background: #e0e0e0;
+}
+
+#new-note {
+  font-weight: 600;
 }
 
 #settings-toggle {
-  border: none;
-  border-radius: 999px;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.7);
-  -webkit-app-region: no-drag;
-}
-
-#settings-toggle:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.brush-icon {
-  width: 14px;
-  height: 14px;
-  position: relative;
-}
-
-.brush-icon::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 9px;
-  border-radius: 2px;
-  background: #555;
-}
-
-.brush-icon::after {
-  content: "";
-  position: absolute;
-  left: 2px;
-  bottom: 0;
-  width: 10px;
-  height: 5px;
-  border-radius: 0 0 6px 6px;
-  background: #888;
+  font-weight: 500;
 }
 
 #close-note {
-  border: none;
-  border-radius: 999px;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.25);
-  color: #333;
-  border: 1px solid rgba(255, 255, 255, 0.7);
   margin-left: auto;
-  -webkit-app-region: no-drag;
+  font-size: 13px;
+  margin-left: auto;
 }
 
 #close-note:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: #f0f0f0;
 }
 
 #settings-panel {
-  padding: 4px 12px 6px 12px;
-  background: rgba(255, 255, 255, 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #dcdcdc;
   font-size: 12px;
+  display: flex;
+  gap: 12px;
 
   -webkit-app-region: no-drag;
 }
@@ -130,27 +90,57 @@ body {
 }
 
 #color-picker {
-  border-radius: 999px;
-  padding: 2px 8px;
-  border: none;
-  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  padding: 0;
+  border: 1px solid #b8b8b8;
+  background: #ffffff;
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
 
 #opacity-slider {
   width: 90px;
+  appearance: none;
+  background: transparent;
   -webkit-app-region: no-drag;
 }
 
-#note {
-  padding: 10px 14px 14px 14px;
-  outline: none;
-  font-family: inherit;
-  height: auto;
-  flex: 1;
+#opacity-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #d0d0d0;
+  border-radius: 2px;
+}
 
-  -webkit-app-region: no-drag;
-  overflow: auto;
+#opacity-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #444;
+  border-radius: 50%;
+  margin-top: -4px;
+  cursor: pointer;
+}
+
+#note {
+  padding: 14px;
+  outline: none;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#note:focus {
+  outline: none;
+}
+
+.window-title {
+  font-size: 12px;
+  color: #444;
+  -webkit-app-region: drag;
+}
+
+.toolbar-spacer {
+  flex: 1;
 }
 
