@@ -3,10 +3,51 @@ const fs = require("fs")
 const path = require("path")
 
 const STORE = path.join(app.getPath("userData"), "notes.json")
+const MEMO_STORE = path.join(app.getPath("userData"), "memo.json")
+const MEMO_TITLES_PATH = path.join(app.getPath("userData"), "memo-titles.json")
 const ICON = path.join(__dirname, "..", "..", "assets", "images", "bok.png")
 
 let windows = []
 let overviewWindow = null
+let isQuitting = false
+
+function getMemoTitleFromContent(html) {
+  if (!html || typeof html !== "string") return "Untitled"
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+  const firstLine = text.split("\n")[0] || text
+  const trimmed = firstLine.trim()
+  if (!trimmed) return "Untitled"
+  const maxLen = 50
+  return trimmed.length > maxLen ? trimmed.slice(0, maxLen) + "…" : trimmed
+}
+
+function loadMemoStore() {
+  try {
+    if (!fs.existsSync(MEMO_STORE)) return {}
+    const raw = fs.readFileSync(MEMO_STORE, "utf8")
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function loadMemoTitles() {
+  try {
+    if (!fs.existsSync(MEMO_TITLES_PATH)) return {}
+    const raw = fs.readFileSync(MEMO_TITLES_PATH, "utf8")
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveMemoTitles(titles) {
+  try {
+    fs.writeFileSync(MEMO_TITLES_PATH, JSON.stringify(titles, null, 2))
+  } catch (e) {
+    console.error("Failed to save memo titles:", e)
+  }
+}
 
 function openOverview() {
   if (overviewWindow && !overviewWindow.isDestroyed()) {
@@ -72,7 +113,14 @@ function createNote(bounds = {}, id) {
 
   windows.push(win)
 
-  win.on("close", saveAllNotes)
+  win.on("close", (e) => {
+    saveAllNotes()
+    if (!isQuitting && !win.forceClose) {
+      e.preventDefault()
+      win.hide()
+      notifyOverviewListChanged()
+    }
+  })
 
   win.on("closed", () => {
     windows = windows.filter(w => w !== win)
@@ -135,9 +183,31 @@ ipcMain.on("create-new-note", () => {
 })
 
 ipcMain.handle("get-memo-windows", () => {
+  const memoStore = loadMemoStore()
+  const customTitles = loadMemoTitles()
   return windows
     .filter(w => !w.isDestroyed())
-    .map(w => ({ id: w.noteId, visible: w.isVisible() }))
+    .map(w => {
+      const note = memoStore[w.noteId]
+      const content = note && note.content
+      const contentTitle = content ? getMemoTitleFromContent(content) : "Untitled"
+      const title = customTitles[w.noteId] !== undefined && customTitles[w.noteId] !== ""
+        ? customTitles[w.noteId]
+        : contentTitle
+      return { id: w.noteId, visible: w.isVisible(), title }
+    })
+})
+
+ipcMain.on("set-memo-title", (_, id, title) => {
+  const titles = loadMemoTitles()
+  const trimmed = typeof title === "string" ? title.trim() : ""
+  if (trimmed) {
+    titles[id] = trimmed
+  } else {
+    delete titles[id]
+  }
+  saveMemoTitles(titles)
+  notifyOverviewListChanged()
 })
 
 ipcMain.on("set-memo-visible", (_, id, visible) => {
@@ -148,11 +218,24 @@ ipcMain.on("set-memo-visible", (_, id, visible) => {
   }
 })
 
+ipcMain.on("destroy-memo", (_, id) => {
+  const w = windows.find(x => !x.isDestroyed() && x.noteId === id)
+  if (w) {
+    w.forceClose = true
+    w.close()
+  }
+})
+
 ipcMain.on("open-overview", () => {
   openOverview()
 })
 
-app.on("before-quit", saveAllNotes)
+ipcMain.handle("get-user-data-path", () => app.getPath("userData"))
+
+app.on("before-quit", () => {
+  isQuitting = true
+  saveAllNotes()
+})
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -161,7 +244,13 @@ app.on("window-all-closed", () => {
 })
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createNote()
+  const all = BrowserWindow.getAllWindows()
+  const visible = all.filter(w => w.isVisible())
+  if (visible.length === 0) {
+    if (all.length > 0) {
+      all[0].show()
+    } else {
+      createNote()
+    }
   }
 })

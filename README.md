@@ -1,22 +1,27 @@
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+# minimemo 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
-## minimemo
-tiny local desktop memos without annoying ads
+memos for desktop without ads 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+---
 
-install & run (from project folder):
+🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+
+
+---
+
+## run the app 🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
 ```bash
-npm install
-npm start
+git clone https://github.com/<your-username>/MemoOS.git && cd MemoOS && npm install && npm start
 ```
 
-- `src/main` – Electron main process 🐑  
-- `src/renderer` – memo windows & UI 🐑  
-- `data` – saved memos (JSON) 🐑
+🐑🐑🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
-🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+## Build installers locally 🐑
+
+```bash
+npm install && npm run build
+```
+
+Output in `dist/`. 🐑🐑🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
+

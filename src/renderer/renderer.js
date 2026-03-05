@@ -20,8 +20,8 @@ const overviewBtn = document.getElementById("overview-btn")
 const urlParams = new URLSearchParams(window.location.search)
 const noteId = urlParams.get("id") || "default"
 
-const STORE_DIR = path.join(__dirname, "..", "..", "data")
-const STORE = path.join(STORE_DIR, "memo.json")
+let STORE_DIR
+let STORE
 
 const DEFAULT_NOTE_COLOR = "#ffffff"
 const DEFAULT_NOTE_OPACITY = 0.9
@@ -190,6 +190,83 @@ function toggleChecklistBox(box) {
   saveCurrentNote()
 }
 
+function getBlockAncestor(node) {
+  let n = node && (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement)
+  while (n && n !== note) {
+    const tag = n.tagName && n.tagName.toLowerCase()
+    if (tag === "div" || tag === "p" || tag === "li") return n
+    n = n.parentElement
+  }
+  return null
+}
+
+function isInsideList(sel) {
+  if (!sel || sel.rangeCount === 0) return null
+  let n = sel.anchorNode
+  while (n && n !== note) {
+    if (n.nodeType === Node.ELEMENT_NODE && n.tagName) {
+      const tag = n.tagName.toLowerCase()
+      if (tag === "li") return n
+      if (tag === "ul" || tag === "ol") return null
+    }
+    n = n.parentNode
+  }
+  return null
+}
+
+function blockContainsChecklist(block) {
+  return block && block.querySelector && block.querySelector(".checklist-box")
+}
+
+function handleEnterInList(e) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return false
+  const range = sel.getRangeAt(0)
+  if (!note.contains(range.startContainer)) return false
+
+  const li = isInsideList(sel)
+  if (li) {
+    e.preventDefault()
+    const list = li.parentNode
+    const newLi = document.createElement("li")
+    li.parentNode.insertBefore(newLi, li.nextSibling)
+    newLi.appendChild(document.createElement("br"))
+    range.setStart(newLi, 0)
+    range.setEnd(newLi, 0)
+    sel.removeAllRanges()
+    sel.addRange(range)
+    saveCurrentNote()
+    return true
+  }
+
+  const block = getBlockAncestor(range.startContainer)
+  if (block && blockContainsChecklist(block)) {
+    e.preventDefault()
+    const newBlock = document.createElement("div")
+    const span = document.createElement("span")
+    span.className = "checklist-box"
+    span.contentEditable = "false"
+    span.textContent = "☐"
+    span.dataset.checked = "false"
+    const space = document.createTextNode("\u00A0")
+    newBlock.appendChild(span)
+    newBlock.appendChild(space)
+    if (block.nextSibling) {
+      note.insertBefore(newBlock, block.nextSibling)
+    } else {
+      note.appendChild(newBlock)
+    }
+    range.setStart(space, 1)
+    range.setEnd(space, 1)
+    sel.removeAllRanges()
+    sel.addRange(range)
+    saveCurrentNote()
+    return true
+  }
+
+  return false
+}
+
 function saveCurrentNote() {
   const store = loadStore()
   const current = store[noteId] || {}
@@ -214,7 +291,13 @@ function saveCurrentNote() {
   saveStore(store)
 }
 
-;(function restore() {
+function getMemoNameFromNote() {
+  const text = (note.innerText || "").trim()
+  const firstLine = text.split("\n")[0] || ""
+  return firstLine.trim() || "Untitled"
+}
+
+function runRestore() {
   const store = loadStore()
   const current = store[noteId]
 
@@ -255,118 +338,129 @@ function saveCurrentNote() {
   note.style.color = fontColor
   note.style.fontFamily = fontFamily
   note.style.fontSize = fontSize + "px"
-})()
-
-/* ===== Events ===== */
-
-const toolbarButtons = document.querySelector(".toolbar-buttons-left")
-if (toolbarButtons) {
-  toolbarButtons.addEventListener("mousedown", (e) => {
-    e.stopPropagation()
-  }, true)
 }
 
-note.oninput = saveCurrentNote
-
-colorPicker.onchange = () => {
-  const raw = parseFloat(opacitySlider.value)
-  const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
-  applyColorAndOpacity(colorPicker.value, opacity)
-  saveCurrentNote()
-}
-
-opacitySlider.oninput = () => {
-  const raw = parseFloat(opacitySlider.value)
-  const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
-  applyColorAndOpacity(colorPicker.value, opacity)
-  saveCurrentNote()
-}
-
-fontColorPicker.oninput = () => {
-  applyTextColorToSelectionOrNote(fontColorPicker.value)
-}
-
-if (fontFamilyPicker) {
-  fontFamilyPicker.onchange = () => {
-    const font = fontFamilyPicker.value
-    const size = fontSizePicker ? fontSizePicker.value + "px" : "14px"
-    applyFontToSelectionOrNote(font, fontSizePicker ? fontSizePicker.value : "14")
+function attachEvents() {
+  const toolbarButtons = document.querySelector(".toolbar-buttons-left")
+  if (toolbarButtons) {
+    toolbarButtons.addEventListener("mousedown", (e) => {
+      e.stopPropagation()
+    }, true)
   }
-}
 
-if (fontSizePicker) {
-  fontSizePicker.onchange = () => {
-    const size = fontSizePicker.value
-    const font = fontFamilyPicker ? fontFamilyPicker.value : "system-ui"
-    applyFontToSelectionOrNote(font, size)
+  note.oninput = saveCurrentNote
+
+  note.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      handleEnterInList(e)
+    }
+  })
+
+  colorPicker.onchange = () => {
+    const raw = parseFloat(opacitySlider.value)
+    const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
+    applyColorAndOpacity(colorPicker.value, opacity)
+    saveCurrentNote()
   }
-}
 
-if (insertBulletListBtn) {
-  insertBulletListBtn.onclick = () => insertList("bullet")
-}
-if (insertNumberedListBtn) {
-  insertNumberedListBtn.onclick = () => insertList("numbered")
-}
-if (insertChecklistBtn) {
-  insertChecklistBtn.onclick = insertChecklist
-}
-
-note.addEventListener("click", (e) => {
-  const box = e.target.classList && e.target.classList.contains("checklist-box") ? e.target : null
-  if (box) {
-    e.preventDefault()
-    toggleChecklistBox(box)
+  opacitySlider.oninput = () => {
+    const raw = parseFloat(opacitySlider.value)
+    const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : 0.85
+    applyColorAndOpacity(colorPicker.value, opacity)
+    saveCurrentNote()
   }
-})
 
-newNoteBtn.onclick = () => {
-  ipcRenderer.send("create-new-note")
-}
-
-if (overviewBtn) {
-  overviewBtn.onclick = () => {
-    ipcRenderer.send("open-overview")
+  fontColorPicker.oninput = () => {
+    applyTextColorToSelectionOrNote(fontColorPicker.value)
   }
-}
 
-settingsToggle.onclick = () => {
-  settingsPanel.classList.toggle("open")
-}
+  if (fontFamilyPicker) {
+    fontFamilyPicker.onchange = () => {
+      const font = fontFamilyPicker.value
+      const size = fontSizePicker ? fontSizePicker.value + "px" : "14px"
+      applyFontToSelectionOrNote(font, fontSizePicker ? fontSizePicker.value : "14")
+    }
+  }
 
-settingsPanel.addEventListener("click", (e) => {
-  const toggle = e.target.closest(".settings-section-toggle")
-  if (!toggle) return
-  const section = toggle.closest(".settings-section")
-  if (!section) return
-  section.classList.toggle("collapsed")
-  const expanded = !section.classList.contains("collapsed")
-  toggle.setAttribute("aria-expanded", String(expanded))
-})
+  if (fontSizePicker) {
+    fontSizePicker.onchange = () => {
+      const size = fontSizePicker.value
+      const font = fontFamilyPicker ? fontFamilyPicker.value : "system-ui"
+      applyFontToSelectionOrNote(font, size)
+    }
+  }
 
-closeNoteBtn.onclick = () => {
-  window.close()
-}
+  if (insertBulletListBtn) {
+    insertBulletListBtn.onclick = () => insertList("bullet")
+  }
+  if (insertNumberedListBtn) {
+    insertNumberedListBtn.onclick = () => insertList("numbered")
+  }
+  if (insertChecklistBtn) {
+    insertChecklistBtn.onclick = insertChecklist
+  }
 
-/* ===== Keyboard Shortcuts ===== */
+  note.addEventListener("click", (e) => {
+    const box = e.target.classList && e.target.classList.contains("checklist-box") ? e.target : null
+    if (box) {
+      e.preventDefault()
+      toggleChecklistBox(box)
+    }
+  })
 
-window.addEventListener("keydown", (e) => {
-  const typing =
-    document.activeElement === note ||
-    note.contains(document.activeElement)
-
-  if (typing) return
-
-  // New note — Cmd/Ctrl + N
-  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "n") {
-    e.preventDefault()
+  newNoteBtn.onclick = () => {
     ipcRenderer.send("create-new-note")
-    return
   }
 
-  // Open settings — Cmd/Ctrl + ,
-  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key === ",") {
-    e.preventDefault()
-    settingsPanel.classList.add("open")
+  if (overviewBtn) {
+    overviewBtn.addEventListener("mousedown", (e) => e.stopPropagation(), true)
+    overviewBtn.onclick = () => {
+      ipcRenderer.send("open-overview")
+    }
   }
-})
+
+  settingsToggle.onclick = () => {
+    settingsPanel.classList.toggle("open")
+  }
+
+  settingsPanel.addEventListener("click", (e) => {
+    const toggle = e.target.closest(".settings-section-toggle")
+    if (!toggle) return
+    const section = toggle.closest(".settings-section")
+    if (!section) return
+    section.classList.toggle("collapsed")
+    const expanded = !section.classList.contains("collapsed")
+    toggle.setAttribute("aria-expanded", String(expanded))
+  })
+
+  closeNoteBtn.onclick = () => {
+    window.close()
+  }
+
+  window.addEventListener("keydown", (e) => {
+    const typing =
+      document.activeElement === note ||
+      note.contains(document.activeElement)
+
+    if (typing) return
+
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "n") {
+      e.preventDefault()
+      ipcRenderer.send("create-new-note")
+      return
+    }
+
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key === ",") {
+      e.preventDefault()
+      settingsPanel.classList.add("open")
+    }
+  })
+}
+
+;(async function init() {
+  const userData = await ipcRenderer.invoke("get-user-data-path")
+  STORE_DIR = userData
+  STORE = path.join(userData, "memo.json")
+  runRestore()
+  attachEvents()
+})()

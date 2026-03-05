@@ -245,6 +245,12 @@ button:active { background: rgba(255, 255, 255, 0.7); }
   white-space: nowrap;
 }
 
+/* Same font as "minimemo" title (Georgia) for text and lists sections */
+.settings-section[data-section="text"],
+.settings-section[data-section="lists"] {
+  font-family: Georgia, serif;
+}
+
 /* ===== Color Pickers (classic look) ===== */
 #color-picker,
 #font-color-picker {

@@ -40,13 +40,80 @@
       gap: 8px;
       cursor: pointer;
       flex: 1;
+      min-width: 0;
     }
     .memo-item input[type="checkbox"] {
       margin: 0;
+      flex-shrink: 0;
     }
-    .memo-id {
-      color: #888;
+    .memo-item-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: text;
+      padding: 2px 4px;
+      margin: -2px -4px;
+      border-radius: 3px;
+    }
+    .memo-item-title:hover {
+      background: #f5f5f5;
+    }
+    .memo-item-title.is-editing {
+      padding: 0;
+      margin: 0;
+    }
+    .memo-item-title-input {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      font: inherit;
+      font-family: Georgia, serif;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 4px 6px;
+      outline: none;
+    }
+    .memo-item-title-input:focus {
+      border-color: #888;
+    }
+    .memo-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .btn-delete {
+      padding: 4px 8px;
       font-size: 11px;
+      color: #888;
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-delete:hover {
+      color: #c00;
+      border-color: #e88;
+      background: #fff0f0;
+    }
+    .btn-new-memo {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-family: Georgia, serif;
+      color: #444;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-new-memo:hover {
+      background: #f0f0f0;
+      border-color: #ccc;
     }
     .empty {
       color: #888;
@@ -57,6 +124,7 @@
 </head>
 <body>
   <h1>Memo overview</h1>
+  <button type="button" class="btn-new-memo" id="btn-new-memo">+ New memo on desktop</button>
   <p class="empty" id="empty-msg">No memos yet.</p>
   <ul class="memo-list" id="memo-list"></ul>
   <script>
@@ -71,23 +139,66 @@
         return
       }
       emptyEl.style.display = 'none'
-      memos.forEach(({ id, visible }) => {
+      memos.forEach(({ id, visible, title }) => {
         const li = document.createElement('li')
         li.className = 'memo-item'
         const label = document.createElement('label')
         const cb = document.createElement('input')
         cb.type = 'checkbox'
         cb.checked = visible
+        cb.title = 'Show on desktop'
         cb.addEventListener('change', () => {
           ipcRenderer.send('set-memo-visible', id, cb.checked)
         })
         label.appendChild(cb)
-        label.appendChild(document.createTextNode('Show on desktop'))
-        const span = document.createElement('span')
-        span.className = 'memo-id'
-        span.textContent = id.length > 24 ? id.slice(0, 24) + '…' : id
+        const titleWrap = document.createElement('span')
+        titleWrap.className = 'memo-item-title'
+        titleWrap.textContent = title || 'Untitled'
+        titleWrap.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          const input = document.createElement('input')
+          input.type = 'text'
+          input.className = 'memo-item-title-input'
+          input.value = titleWrap.textContent || ''
+          input.addEventListener('blur', saveTitle)
+          input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+              ev.preventDefault()
+              input.blur()
+            }
+            if (ev.key === 'Escape') {
+              ev.preventDefault()
+              input.value = titleWrap.textContent
+              input.blur()
+            }
+          })
+          function saveTitle() {
+            const newTitle = input.value.trim()
+            ipcRenderer.send('set-memo-title', id, newTitle)
+            titleWrap.style.display = ''
+            titleWrap.parentNode.removeChild(input)
+            refresh()
+          }
+          titleWrap.style.display = 'none'
+          titleWrap.parentNode.insertBefore(input, titleWrap.nextSibling)
+          input.focus()
+          input.select()
+        })
+        label.appendChild(titleWrap)
+        const actions = document.createElement('div')
+        actions.className = 'memo-item-actions'
+        const deleteBtn = document.createElement('button')
+        deleteBtn.type = 'button'
+        deleteBtn.className = 'btn-delete'
+        deleteBtn.textContent = 'Delete'
+        deleteBtn.addEventListener('click', (e) => {
+          e.preventDefault()
+          ipcRenderer.send('destroy-memo', id)
+        })
+        actions.appendChild(deleteBtn)
         li.appendChild(label)
-        li.appendChild(span)
+        li.appendChild(actions)
         listEl.appendChild(li)
       })
     }
@@ -99,6 +210,10 @@
     refresh()
     ipcRenderer.on('memo-list-changed', refresh)
     window.addEventListener('focus', refresh)
+
+    document.getElementById('btn-new-memo').addEventListener('click', () => {
+      ipcRenderer.send('create-new-note')
+    })
   </script>
 </body>
 </html>

@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-mac
+          path: dist/
+
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-win
+          path: dist/
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux
+          path: dist/
+
+  release:
+    needs: [build-mac, build-win, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-mac
+          path: dist-mac
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-win
+          path: dist-win
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-linux
+          path: dist-linux
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          cp dist-mac/*.dmg release/ 2>/dev/null || true
+          cp dist-mac/*.zip release/ 2>/dev/null || true
+          cp dist-win/*.exe release/ 2>/dev/null || true
+          cp dist-linux/*.AppImage release/ 2>/dev/null || true
+          ls -la release/
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: release/*
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

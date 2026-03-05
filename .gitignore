@@ -1,7 +1,20 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+out/
+
+# Local data (dev / runtime; user data in prod lives in app userData)
 data/
+
+# OS / IDE
 .DS_Store
 .cursor/
 .vscode/
+*.log
+npm-debug.log*
 
+# Env
+.env
+.env.local
