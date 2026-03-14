@@ -11,6 +11,12 @@ struct NoteData {
     content: Option<String>,
     color: Option<String>,
     opacity: Option<f64>,
+    #[serde(default)]
+    font_color: Option<String>,
+    #[serde(default)]
+    font_family: Option<String>,
+    #[serde(default)]
+    font_size: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -134,6 +140,42 @@ fn create_new_note(app: AppHandle) {
     create_note_window(&app, None);
 }
 
+#[tauri::command]
+fn get_note_ids(app: AppHandle) -> Vec<String> {
+    app.webview_windows()
+        .keys()
+        .map(|k| k.to_string())
+        .filter(|l| l != "main" && l != "overview")
+        .collect()
+}
+
+#[tauri::command]
+fn focus_note(app: AppHandle, label: String) {
+    if let Some(win) = app.get_webview_window(&label) {
+        let _ = win.set_focus();
+    }
+}
+
+#[tauri::command]
+fn open_overview(app: AppHandle) {
+    if app.get_webview_window("overview").is_some() {
+        if let Some(win) = app.get_webview_window("overview") {
+            let _ = win.set_focus();
+        }
+        return;
+    }
+    let _ = WebviewWindowBuilder::new(
+        &app,
+        "overview",
+        WebviewUrl::App("overview.html".into()),
+    )
+    .title("minimemo – overview")
+    .inner_size(280.0, 320.0)
+    .decorations(true)
+    .resizable(true)
+    .build();
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(
@@ -148,7 +190,14 @@ fn main() {
                 })
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![load_note, save_note, create_new_note])
+        .invoke_handler(tauri::generate_handler![
+            load_note,
+            save_note,
+            create_new_note,
+            get_note_ids,
+            focus_note,
+            open_overview,
+        ])
         .setup(|app| {
             let shortcut = Shortcut::new(Some(Modifiers::SUPER), Code::KeyN);
             app.global_shortcut().register(shortcut)?;
