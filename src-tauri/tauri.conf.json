@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/v2/tooling/cli/schema.json",
+  "productName": "minimemo",
+  "version": "1.0.0",
+  "identifier": "com.yourname.minimemo",
+  "build": {
+    "frontendDist": "../src/renderer"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "minimemo",
+        "width": 300,
+        "height": 400,
+        "decorations": false,
+        "transparent": true,
+        "resizable": true,
+        "shadow": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": true,
+        "visible": false,
+        "url": "index.html"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "../assets/images/bok.png"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    }
+  },
+  "plugins": {}
+}

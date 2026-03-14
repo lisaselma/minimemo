@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 out/
+src-tauri/target/
 
 # Local data (dev / runtime; user data in prod lives in app userData)
 data/

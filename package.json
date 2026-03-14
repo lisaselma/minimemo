@@ -2,42 +2,15 @@
   "name": "minimemo",
   "version": "1.0.0",
   "description": "Tiny local desktop memos without annoying ads",
-  "main": "src/main/main.js",
+  "private": true,
   "author": "",
   "license": "MIT",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux"
-  },
-  "build": {
-    "appId": "com.minimemo.app",
-    "productName": "minimemo",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "src/**/*",
-      "assets/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "assets/images/icon-512.png"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "assets/images/icon-512.png"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "assets/images/icon-512.png"
-    }
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
   },
   "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.13.3"
+    "@tauri-apps/cli": "^2"
   }
 }
