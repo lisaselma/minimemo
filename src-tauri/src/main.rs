@@ -113,13 +113,19 @@ fn get_notes_info(app: AppHandle) -> Vec<NoteInfo> {
 
     let mut infos: Vec<NoteInfo> = store.iter()
         .filter(|(l, _)| l.as_str() != "main" && l.as_str() != "overview")
-        .map(|(label, val)| {
+        .filter_map(|(label, val)| {
             let data: NoteData = serde_json::from_value(val.clone()).unwrap_or_default();
-            NoteInfo {
-                label: label.clone(),
-                title: data.title.unwrap_or_else(|| "Untitled".to_string()),
-                visible: open.contains(label),
+            let has_title = data.title.as_deref().map(|t| !t.is_empty() && t != "minimemo" && t != "Untitled").unwrap_or(false);
+            let has_content = data.content.as_deref().map(|c| !c.trim_matches(|ch: char| ch.is_whitespace() || ch == '\u{00a0}').is_empty()).unwrap_or(false);
+            // Only show in overview if the user gave it a custom title OR wrote something in it
+            if !has_title && !has_content {
+                return None;
             }
+            Some(NoteInfo {
+                label: label.clone(),
+                title: data.title.filter(|t| !t.is_empty()).unwrap_or_else(|| "Untitled".to_string()),
+                visible: open.contains(label),
+            })
         })
         .collect();
 

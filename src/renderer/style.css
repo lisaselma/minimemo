@@ -55,7 +55,7 @@ body {
 .toolbar-spacer {
   flex: 1;
   min-width: 12px;
-  height: 100%;
+  align-self: stretch;   /* fill the full toolbar height so drag area is real */
   -webkit-app-region: drag;
 }
 

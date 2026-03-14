@@ -304,10 +304,37 @@ function attachEvents() {
   // New note
   newNoteBtn.onclick = () => invoke("create_new_note");
 
-  // Overview
+  // Overview button — short click: open overview; long press (≥600ms): insert 🐑 into note
   if (overviewBtn) {
-    overviewBtn.addEventListener("mousedown", (e) => e.stopPropagation(), true);
-    overviewBtn.onclick = () => invoke("open_overview");
+    let sheepTimer = null;
+    let sheepFired = false;
+
+    overviewBtn.title = "Overview (hold for 🐑)";
+
+    overviewBtn.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      sheepFired = false;
+      sheepTimer = setTimeout(() => {
+        sheepFired = true;
+        note.focus();
+        document.execCommand("insertText", false, "🐑");
+        saveCurrentNote();
+        // Bounce the button
+        overviewBtn.style.transition = "transform 0.15s ease";
+        overviewBtn.style.transform  = "scale(1.4)";
+        setTimeout(() => { overviewBtn.style.transform = "scale(1)"; }, 150);
+        setTimeout(() => { overviewBtn.style.transition = ""; overviewBtn.style.transform = ""; }, 320);
+      }, 600);
+    }, true);
+
+    const cancelSheep = () => clearTimeout(sheepTimer);
+    overviewBtn.addEventListener("mouseup",    cancelSheep, true);
+    overviewBtn.addEventListener("mouseleave", cancelSheep);
+
+    overviewBtn.onclick = () => {
+      if (sheepFired) { sheepFired = false; return; }
+      invoke("open_overview");
+    };
   }
 
   // Inline rename in toolbar
