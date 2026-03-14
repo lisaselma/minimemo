@@ -1,5 +1,7 @@
 const { invoke } = window.__TAURI__.core;
 const { getCurrentWebviewWindow } = window.__TAURI__.webviewWindow;
+const windowApi = window.__TAURI__.window || {};
+const getCurrentWindow = windowApi.getCurrent || (() => getCurrentWebviewWindow());
 
 const note = document.getElementById("note");
 const newNoteBtn = document.getElementById("new-note");
@@ -378,7 +380,10 @@ function attachEvents() {
     toggle.setAttribute("aria-expanded", String(expanded));
   });
 
-  closeNoteBtn.onclick = () => getCurrentWebviewWindow().close();
+  closeNoteBtn.onclick = () => {
+    const win = getCurrentWindow();
+    if (win && typeof win.close === "function") win.close();
+  };
 
   window.addEventListener("keydown", (e) => {
     const typing = document.activeElement === note || note.contains(document.activeElement);

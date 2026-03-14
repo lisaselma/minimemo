@@ -1,1 +1,1 @@
-{}
+{"default":{"identifier":"default","description":"Allow all app windows to close and use default core/plugin APIs","local":true,"windows":["*"],"permissions":["core:default","core:window:allow-close"]}}
