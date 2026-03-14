@@ -115,15 +115,22 @@ fn get_notes_info(app: AppHandle) -> Vec<NoteInfo> {
         .filter(|(l, _)| l.as_str() != "main" && l.as_str() != "overview")
         .filter_map(|(label, val)| {
             let data: NoteData = serde_json::from_value(val.clone()).unwrap_or_default();
-            let has_title = data.title.as_deref().map(|t| !t.is_empty() && t != "minimemo" && t != "Untitled").unwrap_or(false);
-            let has_content = data.content.as_deref().map(|c| !c.trim_matches(|ch: char| ch.is_whitespace() || ch == '\u{00a0}').is_empty()).unwrap_or(false);
-            // Only show in overview if the user gave it a custom title OR wrote something in it
-            if !has_title && !has_content {
-                return None;
-            }
+            let custom_title = data.title.as_deref().and_then(|t| {
+                let t = t.trim();
+                if t.is_empty() || t == "minimemo" || t.eq_ignore_ascii_case("untitled") {
+                    None
+                } else {
+                    Some(t.to_string())
+                }
+            });
+            // Only show in overview if the user gave the memo a custom title (no untitled/minimemo)
+            let title = match custom_title {
+                Some(t) => t,
+                None => return None,
+            };
             Some(NoteInfo {
                 label: label.clone(),
-                title: data.title.filter(|t| !t.is_empty()).unwrap_or_else(|| "Untitled".to_string()),
+                title,
                 visible: open.contains(label),
             })
         })
