@@ -1,21 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <title>minimemo</title>
   <style>
-    body { font-family: system-ui, sans-serif; font-size: 13px; margin: 12px; padding: 0; }
-    h2 { margin: 0 0 10px; font-size: 14px; color: #333; }
-    ul { list-style: none; padding: 0; margin: 0; }
-    li { padding: 6px 8px; margin: 2px 0; border-radius: 4px; cursor: pointer; }
-    li:hover { background: #eee; }
-    .btn { margin-top: 10px; padding: 8px 12px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    .btn:hover { background: #555; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      background: #f5f5f5;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+    }
+
+    header img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      font-family: Georgia, serif;
+      flex: 1;
+    }
+
+    #new-note-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #new-note-btn:hover { background: #444; }
+
+    /* ── List ── */
+    #note-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      margin-top: 40px;
+      font-size: 13px;
+    }
+
+    /* ── Note row ── */
+    .note-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      margin-bottom: 6px;
+      transition: box-shadow 0.1s;
+    }
+    .note-row:hover { box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+    .note-row.hidden-note { opacity: 0.5; }
+
+    /* Visibility dot */
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: #3cb76c;
+    }
+    .note-row.hidden-note .dot { background: #bbb; }
+
+    /* Editable title */
+    .note-title-field {
+      flex: 1;
+      font-size: 13px;
+      color: #333;
+      outline: none;
+      border: none;
+      background: transparent;
+      cursor: text;
+      min-width: 0;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+    .note-title-field:focus {
+      background: #f0f0f0;
+      color: #111;
+    }
+
+    /* Action buttons */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 15px;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: #666;
+      transition: background 0.12s;
+    }
+    .action-btn:hover { background: #f0f0f0; color: #222; }
+    .action-btn.danger:hover { background: #fff0f0; color: #c0392b; }
+
+    /* Focus button (title area) */
+    .note-title-field[data-visible="true"] {
+      cursor: pointer;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 8px 14px;
+      border-top: 1px solid #ddd;
+      background: #fff;
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h2>Memos</h2>
-  <ul id="list"></ul>
-  <button class="btn" id="new-note">New memo</button>
+  <header>
+    <img src="images/bok.png" alt="minimemo" />
+    <h1>minimemo</h1>
+    <button id="new-note-btn">&#43; New memo</button>
+  </header>
+
+  <div id="note-list">
+    <p class="empty-msg">No memos yet</p>
+  </div>
+
+  <footer id="footer">0 memos</footer>
+
   <script src="overview.js"></script>
 </body>
 </html>

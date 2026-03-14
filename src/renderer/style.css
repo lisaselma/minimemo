@@ -1,168 +1,149 @@
-html, body {
-  height: 100%;
+/* ===== Reset / root ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 html {
+  height: 100%;
   background: transparent;
+  /* clip body's rounded corners so the window is truly rounded */
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 body {
-  --note-bg: rgba(255, 255, 255, 0.9);
+  --note-bg: rgba(255, 255, 255, 0.92);
 
   margin: 0;
+  height: 100%;
   background: var(--note-bg);
-  border-radius: 6px;
-  border: 1px solid #d0d0d0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 
   font-family: "Caviar Dreams", system-ui, -apple-system, sans-serif;
   display: flex;
   flex-direction: column;
 }
 
-/* ===== Toolbar (window header) ===== */
+/* ===== Toolbar ===== */
 #toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
+  padding: 5px 8px;
+  flex-shrink: 0;
 
   background: var(--note-bg);
-  border-radius: 6px 6px 0 0;
-  border-bottom: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px 10px 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 
-  /* Entire bar is draggable; .toolbar-buttons below overrides to no-drag */
+  /* Make the whole bar a drag handle … */
+  -webkit-app-region: drag;
+  /* … but not selectable while dragging */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Elements inside toolbar that must NOT be drag handles */
+.tb-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* The spacer stretches to fill remaining toolbar space = primary drag zone */
+.toolbar-spacer {
+  flex: 1;
+  min-width: 12px;
+  height: 100%;
   -webkit-app-region: drag;
 }
 
-.window-title {
-  font-size: 12px;
-  color: #666;
-  font-family: Georgia, serif;
-}
-
-.toolbar-btn-overview {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 8px;
-  min-width: auto;
-  width: auto;
-  height: 28px;
-  background: var(--note-bg);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: #666;
-  font-family: Georgia, serif;
-  font-size: 12px;
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-}
-
-.toolbar-btn-overview:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.toolbar-btn-overview .header-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.header-icon {
-  object-fit: contain;
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
-.toolbar-spacer {
-  flex: 1;
-}
-
-/* Button group left: + and i */
-.toolbar-buttons {
+/* Left / right button groups */
+.tb-group {
   display: flex;
   align-items: center;
-  gap: 6px;
-  -webkit-app-region: no-drag;
-  pointer-events: auto;
-  position: relative;
-  z-index: 100;
-}
-
-.toolbar-buttons-left {
-  margin-right: 4px;
-}
-
-.toolbar-buttons button,
-#close-note {
-  pointer-events: auto;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  padding: 0;
-  background: var(--note-bg);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: #333;
-}
-
-.toolbar-buttons button:hover,
-#close-note:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.toolbar-buttons button:active,
-#close-note:active {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-/* Symbol buttons: use system font so × • ☐ render correctly in WebKit */
-.toolbar-icon-symbol {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1;
-}
-
-#close-note {
-  margin-left: auto;
-  font-size: 16px;
+  gap: 4px;
   -webkit-app-region: no-drag;
 }
 
+/* ===== All toolbar buttons ===== */
 button {
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  padding: 0;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.13);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  line-height: 1;
   cursor: pointer;
   background: var(--note-bg);
   color: #333;
-
   -webkit-app-region: no-drag;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-button:hover { background: rgba(255, 255, 255, 0.5); }
-button:active { background: rgba(255, 255, 255, 0.7); }
+button:hover  { background: rgba(255, 255, 255, 0.65); }
+button:active { background: rgba(220, 220, 220, 0.8); }
 
-/* ===== Settings Panel ===== */
+#close-note {
+  font-size: 14px;
+}
+
+/* ===== Note title (inline editable) ===== */
+.note-title {
+  font-size: 11px;
+  color: #888;
+  font-family: Georgia, serif;
+  cursor: text;
+  outline: none;
+  padding: 1px 5px;
+  border-radius: 4px;
+  max-width: 110px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-app-region: no-drag;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.note-title:focus {
+  background: rgba(255, 255, 255, 0.6);
+  outline: 1px solid rgba(0, 0, 0, 0.15);
+  color: #444;
+}
+
+/* ===== Overview button: just the sheep icon ===== */
+#overview-btn {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 6px;
+}
+
+.header-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ===== Settings panel ===== */
 #settings-panel {
   display: none;
   flex-direction: column;
-  gap: 0;
-  padding: 6px 10px 10px;
-  background: rgba(255, 255, 255, 0.75);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 6px 10px 8px;
+  background: rgba(250, 250, 250, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
   font-size: 11px;
-  position: relative;
-  z-index: 10;
+  flex-shrink: 0;
   -webkit-app-region: no-drag;
 }
 
@@ -177,7 +158,6 @@ button:active { background: rgba(255, 255, 255, 0.7); }
 .settings-section {
   margin-top: 2px;
 }
-
 .settings-section:first-child {
   margin-top: 0;
 }
@@ -187,169 +167,127 @@ button:active { background: rgba(255, 255, 255, 0.7); }
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 4px 0;
+  padding: 3px 0;
   border: none;
+  border-radius: 4px;
   background: none;
   cursor: pointer;
   font: inherit;
-  color: #888;
+  color: #999;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  -webkit-app-region: no-drag;
+  letter-spacing: 0.05em;
 }
 
-.settings-section-toggle:hover {
-  color: #555;
-}
+.settings-section-toggle:hover { color: #555; }
+.settings-section-toggle[aria-expanded="true"] { color: #555; }
 
-.settings-section-label {
-  color: inherit;
-  margin: 0;
-}
+.settings-section-label { color: inherit; }
 
 .settings-section-chevron {
   display: inline-block;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 5px solid currentColor;
   margin-left: 4px;
   transition: transform 0.15s ease;
 }
-
 .settings-section:not(.collapsed) .settings-section-chevron {
   transform: rotate(-180deg);
 }
-
-.settings-section-toggle[aria-expanded="true"] {
-  color: #555;
-}
-
-.settings-section.collapsed .settings-row {
-  display: none;
-}
+.settings-section.collapsed .settings-row { display: none; }
 
 .settings-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  padding-left: 0;
-  padding-bottom: 6px;
+  gap: 6px 10px;
+  padding: 4px 0 6px;
 }
 
-.settings-row .field {
+.field {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin: 0;
 }
+.field-label { color: #777; white-space: nowrap; }
 
-.settings-row .field-label {
-  color: #666;
-  white-space: nowrap;
-}
-
-/* Same font as "minimemo" title (Georgia) for text and lists sections */
-.settings-section[data-section="text"],
-.settings-section[data-section="lists"] {
-  font-family: Georgia, serif;
-}
-
-/* ===== Color Pickers (classic look) ===== */
+/* Color pickers */
 #color-picker,
 #font-color-picker {
-  width: 28px;
-  height: 18px;
+  width: 26px;
+  height: 17px;
   padding: 0;
-  border: 1px solid #b8b8b8;
-  border-radius: 2px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
   background: none;
   cursor: pointer;
-
-  -webkit-app-region: no-drag;
 }
-
 #color-picker::-webkit-color-swatch-wrapper,
-#font-color-picker::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
+#font-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
 #color-picker::-webkit-color-swatch,
-#font-color-picker::-webkit-color-swatch {
-  border: none;
-  border-radius: 1px;
-}
+#font-color-picker::-webkit-color-swatch { border: none; border-radius: 2px; }
 
-/* ===== Opacity Slider ===== */
+/* Opacity slider */
 #opacity-slider {
-  width: 90px;
+  width: 80px;
   appearance: none;
   background: transparent;
-  -webkit-app-region: no-drag;
 }
-
 #opacity-slider::-webkit-slider-runnable-track {
   height: 4px;
-  background: #d0d0d0;
+  background: #ccc;
   border-radius: 2px;
 }
-
 #opacity-slider::-webkit-slider-thumb {
   appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #444;
+  width: 11px; height: 11px;
+  background: #555;
   border-radius: 50%;
-  margin-top: -4px;
+  margin-top: -3.5px;
   cursor: pointer;
 }
 
+/* Selects */
 #font-family-picker,
 #font-size-picker {
-  padding: 2px 6px;
+  padding: 2px 5px;
   border: 1px solid #ccc;
   border-radius: 3px;
   background: #fff;
-  font-size: 11px;
-  -webkit-app-region: no-drag;
+  font-size: 10px;
 }
 
-#settings-panel .settings-row button#insert-bullet-list,
-#settings-panel .settings-row button#insert-numbered-list,
-#settings-panel .settings-row button#insert-checklist {
-  border-radius: 3px;
-  min-width: auto;
+/* List insert buttons (pill shape, not circle) */
+.list-btn {
+  border-radius: 10px;
   width: auto;
-  height: 22px;
-  padding: 0 6px;
-  font-size: 13px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  min-width: auto;
+  height: 20px;
+  padding: 0 8px;
+  font-size: 11px;
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* ===== Note Editor ===== */
+/* ===== Note editor ===== */
 #note {
-  -webkit-app-region: no-drag;
-
   flex: 1;
   min-height: 0;
   width: 100%;
-  box-sizing: border-box;
-
-  padding: 14px;
+  padding: 12px 14px;
   border: none;
   outline: none;
   background: transparent;
-
   font-size: 14px;
-  line-height: 1.5;
-
+  line-height: 1.55;
   overflow-y: auto;
+  -webkit-app-region: no-drag;
+  -webkit-user-select: text;
+  user-select: text;
 }
+
+#note:focus { outline: none; }
 
 #note .checklist-box {
   cursor: pointer;
@@ -357,7 +295,4 @@ button:active { background: rgba(255, 255, 255, 0.7); }
   margin-right: 4px;
   font-size: 1.1em;
 }
-
-#note .checklist-box[data-checked="true"] {
-  opacity: 0.7;
-}
+#note .checklist-box[data-checked="true"] { opacity: 0.6; }

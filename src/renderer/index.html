@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="toolbar">
-    <div class="toolbar-buttons toolbar-buttons-left">
+  <div id="toolbar" data-tauri-drag-region>
+    <div class="tb-group tb-no-drag">
       <button id="new-note" title="New memo">+</button>
-      <button id="settings-toggle" title="Settings">i</button>
+      <button id="settings-toggle" title="Settings">&#9881;</button>
     </div>
-    <button type="button" id="overview-btn" class="toolbar-btn-overview" title="Memo overview">
-      <img src="images/bok.png" alt="" class="header-icon" />
-      <span class="window-title">minimemo</span>
-    </button>
-    <div class="toolbar-spacer"></div>
-    <button id="close-note" class="toolbar-icon-symbol" title="Close memo" aria-label="Close">&#215;</button>
+    <span
+      id="note-title"
+      class="note-title tb-no-drag"
+      contenteditable="true"
+      spellcheck="false"
+      title="Click to rename"
+    >minimemo</span>
+    <div class="toolbar-spacer" data-tauri-drag-region></div>
+    <div class="tb-group tb-no-drag">
+      <button id="overview-btn" title="Memo overview">
+        <img src="images/bok.png" alt="overview" class="header-icon" />
+      </button>
+      <button id="close-note" class="tb-no-drag" title="Close memo">&#215;</button>
+    </div>
   </div>
+
   <div id="settings-panel">
     <div class="settings-section collapsed" data-section="appearance">
       <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">make the memo look nice</span>
+        <span class="settings-section-label">&#127775; appearance</span>
         <span class="settings-section-chevron"></span>
       </button>
       <div class="settings-row">
-        <label class="field"><span class="field-label">background color</span>
+        <label class="field">
+          <span class="field-label">background</span>
           <input type="color" id="color-picker" title="Memo color" />
         </label>
-        <label class="field"><span class="field-label">transparency</span>
+        <label class="field">
+          <span class="field-label">transparency</span>
           <input type="range" id="opacity-slider" min="0.3" max="1" step="0.05" />
         </label>
       </div>
     </div>
     <div class="settings-section collapsed" data-section="text">
       <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">make the text look nice</span>
+        <span class="settings-section-label">&#9998; text style</span>
         <span class="settings-section-chevron"></span>
       </button>
       <div class="settings-row">
-        <label class="field"><span class="field-label">text color</span>
+        <label class="field">
+          <span class="field-label">color</span>
           <input type="color" id="font-color-picker" />
         </label>
-        <label class="field"><span class="field-label">font</span>
+        <label class="field">
+          <span class="field-label">font</span>
           <select id="font-family-picker">
             <option value="system-ui">System</option>
             <option value="Georgia">Georgia</option>
@@ -52,7 +66,8 @@
             <option value="monospace">Monospace</option>
           </select>
         </label>
-        <label class="field"><span class="field-label">Size</span>
+        <label class="field">
+          <span class="field-label">size</span>
           <select id="font-size-picker">
             <option value="12">12</option>
             <option value="14" selected>14</option>
@@ -66,18 +81,18 @@
     </div>
     <div class="settings-section collapsed" data-section="lists">
       <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">making nice lists</span>
+        <span class="settings-section-label">&#9776; lists</span>
         <span class="settings-section-chevron"></span>
       </button>
       <div class="settings-row">
-        <button type="button" id="insert-bullet-list" class="toolbar-icon-symbol" title="Bullet list" aria-label="Bullet list">&#8226;</button>
-        <button type="button" id="insert-numbered-list" class="toolbar-icon-symbol" title="Numbered list" aria-label="Numbered list">1.</button>
-        <button type="button" id="insert-checklist" class="toolbar-icon-symbol" title="Checklist" aria-label="Checklist">&#9744;</button>
+        <button type="button" id="insert-bullet-list" class="list-btn" title="Bullet list" aria-label="Bullet list">&#8226; bullet</button>
+        <button type="button" id="insert-numbered-list" class="list-btn" title="Numbered list" aria-label="Numbered list">1. numbered</button>
+        <button type="button" id="insert-checklist" class="list-btn" title="Checklist" aria-label="Checklist">&#9744; checklist</button>
       </div>
     </div>
   </div>
+
   <div id="note" contenteditable="true"></div>
   <script src="renderer.js"></script>
 </body>
 </html>
-

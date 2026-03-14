@@ -3,131 +3,99 @@ const { getCurrentWebviewWindow } = window.__TAURI__.webviewWindow;
 const windowApi = window.__TAURI__.window || {};
 const getCurrentWindow = windowApi.getCurrent || (() => getCurrentWebviewWindow());
 
-const note = document.getElementById("note");
-const newNoteBtn = document.getElementById("new-note");
-const colorPicker = document.getElementById("color-picker");
-const opacitySlider = document.getElementById("opacity-slider");
-const settingsToggle = document.getElementById("settings-toggle");
-const closeNoteBtn = document.getElementById("close-note");
-const settingsPanel = document.getElementById("settings-panel");
+// ── DOM refs ───────────────────────────────────────────────────────────────────
+const note            = document.getElementById("note");
+const newNoteBtn      = document.getElementById("new-note");
+const colorPicker     = document.getElementById("color-picker");
+const opacitySlider   = document.getElementById("opacity-slider");
+const settingsToggle  = document.getElementById("settings-toggle");
+const closeNoteBtn    = document.getElementById("close-note");
+const settingsPanel   = document.getElementById("settings-panel");
 const fontColorPicker = document.getElementById("font-color-picker");
-const fontFamilyPicker = document.getElementById("font-family-picker");
-const fontSizePicker = document.getElementById("font-size-picker");
-const insertBulletListBtn = document.getElementById("insert-bullet-list");
-const insertNumberedListBtn = document.getElementById("insert-numbered-list");
-const insertChecklistBtn = document.getElementById("insert-checklist");
-const overviewBtn = document.getElementById("overview-btn");
+const fontFamilyPicker= document.getElementById("font-family-picker");
+const fontSizePicker  = document.getElementById("font-size-picker");
+const insertBulletBtn = document.getElementById("insert-bullet-list");
+const insertNumberBtn = document.getElementById("insert-numbered-list");
+const insertCheckBtn  = document.getElementById("insert-checklist");
+const overviewBtn     = document.getElementById("overview-btn");
+const noteTitleEl     = document.getElementById("note-title");
 
 const noteId = getCurrentWebviewWindow().label || "default";
 
 const LEGACY_COLOR_MAP = {
-  purple: "#c8b4ff",
-  yellow: "#fffcb4",
-  blue: "#b4dcff",
-  green: "#c3f5c8",
-  pink: "#ffc8e6",
+  purple: "#c8b4ff", yellow: "#fffcb4", blue: "#b4dcff",
+  green: "#c3f5c8", pink: "#ffc8e6",
 };
 
-const DEFAULT_NOTE_COLOR = "#ffffff";
-const DEFAULT_NOTE_OPACITY = 0.9;
+const DEFAULT_COLOR   = "#ffffff";
+const DEFAULT_OPACITY = 0.92;
 
+// ── Color helpers ──────────────────────────────────────────────────────────────
 function hexToRgb(hex) {
-  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!match) return { r: 255, g: 255, b: 255 };
-  return {
-    r: parseInt(match[1], 16),
-    g: parseInt(match[2], 16),
-    b: parseInt(match[3], 16),
-  };
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return { r: 255, g: 255, b: 255 };
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
 }
 
 function applyColorAndOpacity(colorHex, opacity) {
   const { r, g, b } = hexToRgb(colorHex);
-  let alpha = Number(opacity);
-  if (!Number.isFinite(alpha) || alpha < 0.3 || alpha > 1) alpha = DEFAULT_NOTE_OPACITY;
-  document.body.style.setProperty("--note-bg", `rgba(${r},${g},${b},${alpha})`);
+  let a = Number(opacity);
+  if (!Number.isFinite(a) || a < 0.3 || a > 1) a = DEFAULT_OPACITY;
+  document.body.style.setProperty("--note-bg", `rgba(${r},${g},${b},${a})`);
 }
 
-function applyFontToSelectionOrNote(fontFamily, fontSize) {
+// ── Font helpers ───────────────────────────────────────────────────────────────
+function applyFont(fontFamily, fontSize) {
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) {
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !note.contains(sel.anchorNode)) {
     note.style.fontFamily = fontFamily;
     note.style.fontSize = fontSize + "px";
-    saveCurrentNote();
-    return;
-  }
-  const range = sel.getRangeAt(0);
-  if (!note.contains(sel.anchorNode) || !note.contains(sel.focusNode)) {
-    note.style.fontFamily = fontFamily;
-    note.style.fontSize = fontSize + "px";
-    saveCurrentNote();
-    return;
-  }
-  if (range.collapsed) {
-    note.style.fontFamily = fontFamily;
-    note.style.fontSize = fontSize + "px";
-    saveCurrentNote();
-    return;
-  }
-  try {
-    const contents = range.extractContents();
-    const span = document.createElement("span");
-    span.style.fontFamily = fontFamily;
-    span.style.fontSize = fontSize + "px";
-    span.appendChild(contents);
-    range.insertNode(span);
-    sel.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.selectNodeContents(span);
-    sel.addRange(newRange);
-  } catch (_) {
-    note.style.fontFamily = fontFamily;
-    note.style.fontSize = fontSize + "px";
+  } else {
+    try {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement("span");
+      span.style.fontFamily = fontFamily;
+      span.style.fontSize = fontSize + "px";
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      sel.removeAllRanges();
+      const nr = document.createRange();
+      nr.selectNodeContents(span);
+      sel.addRange(nr);
+    } catch (_) {
+      note.style.fontFamily = fontFamily;
+      note.style.fontSize = fontSize + "px";
+    }
   }
   saveCurrentNote();
 }
 
-function applyTextColorToSelectionOrNote(colorHex) {
+function applyTextColor(colorHex) {
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) {
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !note.contains(sel.anchorNode)) {
     note.style.color = colorHex;
-    saveCurrentNote();
-    return;
-  }
-  const range = sel.getRangeAt(0);
-  if (!note.contains(sel.anchorNode) || !note.contains(sel.focusNode)) {
-    note.style.color = colorHex;
-    saveCurrentNote();
-    return;
-  }
-  if (range.collapsed) {
-    note.style.color = colorHex;
-    saveCurrentNote();
-    return;
-  }
-  try {
-    const contents = range.extractContents();
-    const span = document.createElement("span");
-    span.style.color = colorHex;
-    span.appendChild(contents);
-    range.insertNode(span);
-    sel.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.selectNodeContents(span);
-    sel.addRange(newRange);
-  } catch (_) {
-    note.style.color = colorHex;
+  } else {
+    try {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement("span");
+      span.style.color = colorHex;
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      sel.removeAllRanges();
+      const nr = document.createRange();
+      nr.selectNodeContents(span);
+      sel.addRange(nr);
+    } catch (_) {
+      note.style.color = colorHex;
+    }
   }
   saveCurrentNote();
 }
 
+// ── List helpers ───────────────────────────────────────────────────────────────
 function insertList(type) {
   note.focus();
-  if (type === "bullet") {
-    document.execCommand("insertUnorderedList", false, null);
-  } else if (type === "numbered") {
-    document.execCommand("insertOrderedList", false, null);
-  }
+  document.execCommand(type === "bullet" ? "insertUnorderedList" : "insertOrderedList", false, null);
   saveCurrentNote();
 }
 
@@ -139,27 +107,25 @@ function insertChecklist() {
     range = document.createRange();
     range.selectNodeContents(note);
     range.collapse(true);
-    if (sel) sel.removeAllRanges();
-    if (sel) sel.addRange(range);
+    if (sel) { sel.removeAllRanges(); sel.addRange(range); }
   }
-  const span = document.createElement("span");
-  span.className = "checklist-box";
-  span.contentEditable = "false";
-  span.textContent = "☐";
-  span.dataset.checked = "false";
-  range.insertNode(span);
-  const space = document.createTextNode("\u00A0");
-  range.setStartAfter(span);
-  range.insertNode(space);
-  range.setStartAfter(space);
+  const box = document.createElement("span");
+  box.className = "checklist-box";
+  box.contentEditable = "false";
+  box.textContent = "☐";
+  box.dataset.checked = "false";
+  range.insertNode(box);
+  const sp = document.createTextNode("\u00A0");
+  range.setStartAfter(box);
+  range.insertNode(sp);
+  range.setStartAfter(sp);
   range.collapse(true);
   sel.removeAllRanges();
   sel.addRange(range);
   saveCurrentNote();
 }
 
-function toggleChecklistBox(box) {
-  if (!box || !box.classList.contains("checklist-box")) return;
+function toggleCheckBox(box) {
   const checked = box.dataset.checked === "true";
   box.textContent = checked ? "☐" : "☑";
   box.dataset.checked = checked ? "false" : "true";
@@ -169,29 +135,25 @@ function toggleChecklistBox(box) {
 function getBlockAncestor(node) {
   let n = node && (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement);
   while (n && n !== note) {
-    const tag = n.tagName && n.tagName.toLowerCase();
-    if (tag === "div" || tag === "p" || tag === "li") return n;
+    const t = n.tagName?.toLowerCase();
+    if (t === "div" || t === "p" || t === "li") return n;
     n = n.parentElement;
   }
   return null;
 }
 
-function isInsideList(sel) {
+function isInsideLi(sel) {
   if (!sel || sel.rangeCount === 0) return null;
   let n = sel.anchorNode;
   while (n && n !== note) {
-    if (n.nodeType === Node.ELEMENT_NODE && n.tagName) {
-      const tag = n.tagName.toLowerCase();
-      if (tag === "li") return n;
-      if (tag === "ul" || tag === "ol") return null;
+    if (n.nodeType === Node.ELEMENT_NODE) {
+      const t = n.tagName.toLowerCase();
+      if (t === "li") return n;
+      if (t === "ul" || t === "ol") return null;
     }
     n = n.parentNode;
   }
   return null;
-}
-
-function blockContainsChecklist(block) {
-  return block && block.querySelector && block.querySelector(".checklist-box");
 }
 
 function handleEnterInList(e) {
@@ -200,55 +162,41 @@ function handleEnterInList(e) {
   const range = sel.getRangeAt(0);
   if (!note.contains(range.startContainer)) return false;
 
-  const li = isInsideList(sel);
+  const li = isInsideLi(sel);
   if (li) {
     e.preventDefault();
     const newLi = document.createElement("li");
     li.parentNode.insertBefore(newLi, li.nextSibling);
     newLi.appendChild(document.createElement("br"));
-    range.setStart(newLi, 0);
-    range.setEnd(newLi, 0);
-    sel.removeAllRanges();
-    sel.addRange(range);
+    range.setStart(newLi, 0); range.setEnd(newLi, 0);
+    sel.removeAllRanges(); sel.addRange(range);
     saveCurrentNote();
     return true;
   }
 
   const block = getBlockAncestor(range.startContainer);
-  if (block && blockContainsChecklist(block)) {
+  if (block && block.querySelector(".checklist-box")) {
     e.preventDefault();
     const newBlock = document.createElement("div");
     const span = document.createElement("span");
-    span.className = "checklist-box";
-    span.contentEditable = "false";
-    span.textContent = "☐";
-    span.dataset.checked = "false";
-    const space = document.createTextNode("\u00A0");
-    newBlock.appendChild(span);
-    newBlock.appendChild(space);
-    if (block.nextSibling) {
-      note.insertBefore(newBlock, block.nextSibling);
-    } else {
-      note.appendChild(newBlock);
-    }
-    range.setStart(space, 1);
-    range.setEnd(space, 1);
-    sel.removeAllRanges();
-    sel.addRange(range);
+    span.className = "checklist-box"; span.contentEditable = "false";
+    span.textContent = "☐"; span.dataset.checked = "false";
+    const sp = document.createTextNode("\u00A0");
+    newBlock.appendChild(span); newBlock.appendChild(sp);
+    block.nextSibling ? note.insertBefore(newBlock, block.nextSibling) : note.appendChild(newBlock);
+    range.setStart(sp, 1); range.setEnd(sp, 1);
+    sel.removeAllRanges(); sel.addRange(range);
     saveCurrentNote();
     return true;
   }
-
   return false;
 }
 
+// ── Save / restore ─────────────────────────────────────────────────────────────
 async function saveCurrentNote() {
-  const colorHex = colorPicker.value || DEFAULT_NOTE_COLOR;
-  const rawSlider = parseFloat(opacitySlider.value);
-  const opacity = Number.isFinite(rawSlider) ? Math.max(0.3, Math.min(1, 1.3 - rawSlider)) : DEFAULT_NOTE_OPACITY;
-  const fontColor = fontColorPicker ? fontColorPicker.value : "#000000";
-  const fontFamily = fontFamilyPicker ? fontFamilyPicker.value : "system-ui";
-  const fontSize = fontSizePicker ? fontSizePicker.value : "14";
+  const colorHex = colorPicker.value || DEFAULT_COLOR;
+  const raw = parseFloat(opacitySlider.value);
+  const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : DEFAULT_OPACITY;
 
   await invoke("save_note", {
     id: noteId,
@@ -256,118 +204,86 @@ async function saveCurrentNote() {
       content: note.innerHTML,
       color: colorHex,
       opacity: Math.max(0.3, Math.min(1, opacity)),
-      font_color: fontColor,
-      font_family: fontFamily,
-      font_size: fontSize,
+      font_color: fontColorPicker?.value ?? "#000000",
+      font_family: fontFamilyPicker?.value ?? "system-ui",
+      font_size: fontSizePicker?.value ?? "14",
     },
   });
 }
 
 async function restore() {
   const current = await invoke("load_note", { id: noteId });
-  const isNewNote = !current || (!current.content && !current.color);
+  const isNew = !current || (!current.content && !current.color);
+
   let color = current?.color;
   let opacity = parseFloat(current?.opacity);
-  if (isNewNote || !Number.isFinite(opacity) || opacity < 0.3 || opacity > 1) {
-    opacity = DEFAULT_NOTE_OPACITY;
-  }
-  const fontColor = current?.font_color || "#000000";
+  if (isNew || !Number.isFinite(opacity) || opacity < 0.3 || opacity > 1) opacity = DEFAULT_OPACITY;
+
+  if (color && LEGACY_COLOR_MAP[color]) color = LEGACY_COLOR_MAP[color];
+  if (isNew || !color || !/^#([0-9a-fA-F]{6})$/.test(color)) color = DEFAULT_COLOR;
+
+  const fontColor  = current?.font_color  || "#000000";
   const fontFamily = current?.font_family || "system-ui";
-  const fontSize = current?.font_size || "14";
+  const fontSize   = current?.font_size   || "14";
+  const title      = current?.title       || "minimemo";
 
-  if (color && LEGACY_COLOR_MAP[color]) {
-    color = LEGACY_COLOR_MAP[color];
-  }
-  if (isNewNote || !color || !/^#([0-9a-fA-F]{6})$/.test(color)) {
-    color = DEFAULT_NOTE_COLOR;
-  }
+  if (current?.content) note.innerHTML = current.content;
 
-  if (current?.content) {
-    note.innerHTML = current.content;
-  }
-
-  note.querySelectorAll(".checklist-box").forEach((box) => {
-    box.dataset.checked = box.textContent.trim() === "☑" ? "true" : "false";
+  note.querySelectorAll(".checklist-box").forEach((b) => {
+    b.dataset.checked = b.textContent.trim() === "☑" ? "true" : "false";
   });
 
-  colorPicker.value = color;
-  const sliderVal = 1.3 - opacity;
+  colorPicker.value  = color;
+  const sliderVal    = 1.3 - opacity;
   opacitySlider.value = String(Math.max(0.3, Math.min(1, sliderVal)));
-  if (fontColorPicker) fontColorPicker.value = fontColor;
+  if (fontColorPicker)  fontColorPicker.value  = fontColor;
   if (fontFamilyPicker) fontFamilyPicker.value = fontFamily;
-  if (fontSizePicker) fontSizePicker.value = fontSize;
+  if (fontSizePicker)   fontSizePicker.value   = fontSize;
 
   applyColorAndOpacity(color, opacity);
-  note.style.color = fontColor;
+  note.style.color      = fontColor;
   note.style.fontFamily = fontFamily;
-  note.style.fontSize = fontSize + "px";
+  note.style.fontSize   = fontSize + "px";
+
+  if (noteTitleEl) noteTitleEl.textContent = title;
 }
 
+// ── Event wiring ───────────────────────────────────────────────────────────────
 function attachEvents() {
-  const toolbarButtons = document.querySelector(".toolbar-buttons-left");
-  if (toolbarButtons) {
-    toolbarButtons.addEventListener("mousedown", (e) => e.stopPropagation(), true);
-  }
-
   note.oninput = () => saveCurrentNote();
 
   note.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleEnterInList(e);
   });
 
+  note.addEventListener("click", (e) => {
+    const box = e.target.classList?.contains("checklist-box") ? e.target : null;
+    if (box) { e.preventDefault(); toggleCheckBox(box); }
+  });
+
   colorPicker.onchange = () => {
     const raw = parseFloat(opacitySlider.value);
-    const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : DEFAULT_NOTE_OPACITY;
-    applyColorAndOpacity(colorPicker.value, opacity);
+    const a = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : DEFAULT_OPACITY;
+    applyColorAndOpacity(colorPicker.value, a);
     saveCurrentNote();
   };
 
   opacitySlider.oninput = () => {
     const raw = parseFloat(opacitySlider.value);
-    const opacity = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : DEFAULT_NOTE_OPACITY;
-    applyColorAndOpacity(colorPicker.value, opacity);
+    const a = Number.isFinite(raw) ? Math.max(0.3, Math.min(1, 1.3 - raw)) : DEFAULT_OPACITY;
+    applyColorAndOpacity(colorPicker.value, a);
     saveCurrentNote();
   };
 
-  if (fontColorPicker) {
-    fontColorPicker.oninput = () => applyTextColorToSelectionOrNote(fontColorPicker.value);
-  }
+  if (fontColorPicker)  fontColorPicker.oninput  = () => applyTextColor(fontColorPicker.value);
+  if (fontFamilyPicker) fontFamilyPicker.onchange = () => applyFont(fontFamilyPicker.value, fontSizePicker?.value ?? "14");
+  if (fontSizePicker)   fontSizePicker.onchange   = () => applyFont(fontFamilyPicker?.value ?? "system-ui", fontSizePicker.value);
 
-  if (fontFamilyPicker) {
-    fontFamilyPicker.onchange = () => {
-      const font = fontFamilyPicker.value;
-      const size = fontSizePicker ? fontSizePicker.value : "14";
-      applyFontToSelectionOrNote(font, size);
-    };
-  }
+  if (insertBulletBtn) insertBulletBtn.onclick = () => insertList("bullet");
+  if (insertNumberBtn) insertNumberBtn.onclick = () => insertList("numbered");
+  if (insertCheckBtn)  insertCheckBtn.onclick  = () => insertChecklist();
 
-  if (fontSizePicker) {
-    fontSizePicker.onchange = () => {
-      const size = fontSizePicker.value;
-      const font = fontFamilyPicker ? fontFamilyPicker.value : "system-ui";
-      applyFontToSelectionOrNote(font, size);
-    };
-  }
-
-  if (insertBulletListBtn) insertBulletListBtn.onclick = () => insertList("bullet");
-  if (insertNumberedListBtn) insertNumberedListBtn.onclick = () => insertList("numbered");
-  if (insertChecklistBtn) insertChecklistBtn.onclick = insertChecklist;
-
-  note.addEventListener("click", (e) => {
-    const box = e.target.classList && e.target.classList.contains("checklist-box") ? e.target : null;
-    if (box) {
-      e.preventDefault();
-      toggleChecklistBox(box);
-    }
-  });
-
-  newNoteBtn.onclick = () => invoke("create_new_note");
-
-  if (overviewBtn) {
-    overviewBtn.addEventListener("mousedown", (e) => e.stopPropagation(), true);
-    overviewBtn.onclick = () => invoke("open_overview");
-  }
-
+  // Settings panel toggle
   settingsToggle.onclick = () => settingsPanel.classList.toggle("open");
 
   settingsPanel.addEventListener("click", (e) => {
@@ -376,25 +292,47 @@ function attachEvents() {
     const section = toggle.closest(".settings-section");
     if (!section) return;
     section.classList.toggle("collapsed");
-    const expanded = !section.classList.contains("collapsed");
-    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.setAttribute("aria-expanded", String(!section.classList.contains("collapsed")));
   });
 
+  // Close button
   closeNoteBtn.onclick = () => {
     const win = getCurrentWindow();
-    if (win && typeof win.close === "function") win.close();
+    if (win?.close) win.close();
   };
 
+  // New note
+  newNoteBtn.onclick = () => invoke("create_new_note");
+
+  // Overview
+  if (overviewBtn) {
+    overviewBtn.addEventListener("mousedown", (e) => e.stopPropagation(), true);
+    overviewBtn.onclick = () => invoke("open_overview");
+  }
+
+  // Inline rename in toolbar
+  if (noteTitleEl) {
+    noteTitleEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); noteTitleEl.blur(); }
+      if (e.key === "Escape") { noteTitleEl.blur(); }
+    });
+    noteTitleEl.addEventListener("blur", async () => {
+      const newTitle = noteTitleEl.textContent.trim() || "minimemo";
+      noteTitleEl.textContent = newTitle;
+      await invoke("rename_note", { id: noteId, title: newTitle });
+    });
+    // Prevent drag from firing when clicking on title
+    noteTitleEl.addEventListener("mousedown", (e) => e.stopPropagation());
+  }
+
+  // Keyboard shortcuts (only when note isn't focused)
   window.addEventListener("keydown", (e) => {
     const typing = document.activeElement === note || note.contains(document.activeElement);
     if (typing) return;
-
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "n") {
       e.preventDefault();
       invoke("create_new_note");
-      return;
     }
-
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key === ",") {
       e.preventDefault();
       settingsPanel.classList.add("open");
@@ -402,7 +340,8 @@ function attachEvents() {
   });
 }
 
-(async function init() {
+// ── Init ───────────────────────────────────────────────────────────────────────
+(async () => {
   await restore();
   attachEvents();
 })();
