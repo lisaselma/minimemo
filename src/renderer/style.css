@@ -6,23 +6,30 @@
 html {
   height: 100%;
   background: transparent;
-  /* clip body's rounded corners so the window is truly rounded */
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 16px;
 }
 
 body {
-  --note-bg: rgba(255, 255, 255, 0.92);
+  --note-bg: rgba(255, 255, 255, 0.78);
 
   margin: 0;
   height: 100%;
   background: var(--note-bg);
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+  /* Frosted glass effect */
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
   overflow: hidden;
 
-  font-family: "Caviar Dreams", system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -31,35 +38,32 @@ body {
 #toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
+  gap: 5px;
+  padding: 7px 10px 6px;
   flex-shrink: 0;
 
-  background: var(--note-bg);
-  border-radius: 10px 10px 0 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 
-  /* Make the whole bar a drag handle … */
   -webkit-app-region: drag;
-  /* … but not selectable while dragging */
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Elements inside toolbar that must NOT be drag handles */
 .tb-no-drag {
   -webkit-app-region: no-drag;
 }
 
-/* The spacer stretches to fill remaining toolbar space = primary drag zone */
 .toolbar-spacer {
   flex: 1;
-  min-width: 12px;
-  align-self: stretch;   /* fill the full toolbar height so drag area is real */
+  min-width: 8px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   -webkit-app-region: drag;
 }
 
-/* Left / right button groups */
 .tb-group {
   display: flex;
   align-items: center;
@@ -72,138 +76,118 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 0, 0, 0.13);
+  border: none;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   padding: 0;
-  font-size: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   line-height: 1;
   cursor: pointer;
-  background: var(--note-bg);
-  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.45);
+  transition: background 0.15s, color 0.15s, transform 0.1s;
   -webkit-app-region: no-drag;
   -webkit-user-select: none;
   user-select: none;
 }
 
-button:hover  { background: rgba(255, 255, 255, 0.65); }
-button:active { background: rgba(220, 220, 220, 0.8); }
+button:hover  { background: rgba(0, 0, 0, 0.11); color: rgba(0, 0, 0, 0.75); }
+button:active { transform: scale(0.88); }
 
+/* Close button — red tint */
 #close-note {
   font-size: 14px;
+  background: rgba(255, 89, 78, 0.18);
+  color: rgba(200, 50, 40, 0.65);
+}
+#close-note:hover {
+  background: rgba(255, 59, 48, 0.82);
+  color: #fff;
+}
+
+/* New note button — green tint */
+#new-note {
+  font-size: 14px;
+  background: rgba(40, 200, 70, 0.15);
+  color: rgba(30, 140, 50, 0.7);
+}
+#new-note:hover {
+  background: rgba(40, 185, 65, 0.8);
+  color: #fff;
 }
 
 /* ===== Note title (inline editable) ===== */
 .note-title {
   font-size: 11px;
-  color: #888;
-  font-family: Georgia, serif;
+  color: rgba(0, 0, 0, 0.35);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   cursor: text;
   outline: none;
-  padding: 1px 5px;
-  border-radius: 4px;
-  max-width: 110px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  max-width: 120px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   -webkit-app-region: no-drag;
   -webkit-user-select: text;
   user-select: text;
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0.01em;
 }
+
+.note-title:hover { color: rgba(0, 0, 0, 0.5); }
 
 .note-title:focus {
-  background: rgba(255, 255, 255, 0.6);
-  outline: 1px solid rgba(0, 0, 0, 0.15);
-  color: #444;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.65);
+  outline: none;
 }
 
-/* ===== Overview button: just the sheep icon ===== */
+/* ===== Overview button ===== */
 #overview-btn {
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 7px;
 }
 
 .header-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   object-fit: contain;
   pointer-events: none;
+  opacity: 0.55;
 }
 
 /* ===== Settings panel ===== */
 #settings-panel {
   display: none;
   flex-direction: column;
-  padding: 6px 10px 8px;
-  background: rgba(250, 250, 250, 0.88);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  gap: 6px;
+  padding: 8px 12px 10px;
+
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
   font-size: 11px;
   flex-shrink: 0;
   -webkit-app-region: no-drag;
 }
 
-#settings-panel.open {
-  display: flex;
-}
-
-#settings-panel * {
-  -webkit-app-region: no-drag;
-}
-
-.settings-section {
-  margin-top: 2px;
-}
-.settings-section:first-child {
-  margin-top: 0;
-}
-
-.settings-section-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 3px 0;
-  border: none;
-  border-radius: 4px;
-  background: none;
-  cursor: pointer;
-  font: inherit;
-  color: #999;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.settings-section-toggle:hover { color: #555; }
-.settings-section-toggle[aria-expanded="true"] { color: #555; }
-
-.settings-section-label { color: inherit; }
-
-.settings-section-chevron {
-  display: inline-block;
-  width: 0; height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid currentColor;
-  margin-left: 4px;
-  transition: transform 0.15s ease;
-}
-.settings-section:not(.collapsed) .settings-section-chevron {
-  transform: rotate(-180deg);
-}
-.settings-section.collapsed .settings-row { display: none; }
+#settings-panel.open { display: flex; }
+#settings-panel * { -webkit-app-region: no-drag; }
 
 .settings-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 10px;
-  padding: 4px 0 6px;
 }
 
 .field {
@@ -211,76 +195,88 @@ button:active { background: rgba(220, 220, 220, 0.8); }
   align-items: center;
   gap: 4px;
 }
-.field-label { color: #777; white-space: nowrap; }
 
-/* Color pickers */
+.field-label {
+  color: rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+
+/* ===== Color pickers ===== */
 #color-picker,
 #font-color-picker {
   width: 26px;
   height: 17px;
   padding: 0;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 5px;
   background: none;
   cursor: pointer;
 }
 #color-picker::-webkit-color-swatch-wrapper,
 #font-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
 #color-picker::-webkit-color-swatch,
-#font-color-picker::-webkit-color-swatch { border: none; border-radius: 2px; }
+#font-color-picker::-webkit-color-swatch { border: none; border-radius: 4px; }
 
-/* Opacity slider */
+/* ===== Opacity slider ===== */
 #opacity-slider {
-  width: 80px;
+  width: 72px;
   appearance: none;
   background: transparent;
 }
 #opacity-slider::-webkit-slider-runnable-track {
-  height: 4px;
-  background: #ccc;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 2px;
 }
 #opacity-slider::-webkit-slider-thumb {
   appearance: none;
-  width: 11px; height: 11px;
-  background: #555;
+  width: 11px;
+  height: 11px;
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 50%;
-  margin-top: -3.5px;
+  margin-top: -4px;
   cursor: pointer;
 }
 
-/* Selects */
+/* ===== Selects ===== */
 #font-family-picker,
 #font-size-picker {
-  padding: 2px 5px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #fff;
+  padding: 2px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.75);
   font-size: 10px;
+  color: #333;
+  outline: none;
 }
 
-/* List insert buttons (pill shape, not circle) */
+/* ===== List insert buttons (pill shape) ===== */
 .list-btn {
   border-radius: 10px;
   width: auto;
   min-width: auto;
   height: 20px;
   padding: 0 8px;
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.01em;
 }
+.list-btn:hover { background: rgba(0, 0, 0, 0.1); }
 
 /* ===== Note editor ===== */
 #note {
   flex: 1;
   min-height: 0;
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 14px 10px;
   border: none;
   outline: none;
   background: transparent;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-y: auto;
   -webkit-app-region: no-drag;
   -webkit-user-select: text;
@@ -293,6 +289,17 @@ button:active { background: rgba(220, 220, 220, 0.8); }
   cursor: pointer;
   user-select: none;
   margin-right: 4px;
-  font-size: 1.1em;
+  font-size: 1.05em;
 }
-#note .checklist-box[data-checked="true"] { opacity: 0.6; }
+#note .checklist-box[data-checked="true"] {
+  opacity: 0.5;
+}
+
+/* ===== Scrollbar (subtle) ===== */
+#note::-webkit-scrollbar { width: 4px; }
+#note::-webkit-scrollbar-track { background: transparent; }
+#note::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+#note::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }

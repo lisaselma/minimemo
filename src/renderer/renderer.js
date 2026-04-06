@@ -30,6 +30,14 @@ const LEGACY_COLOR_MAP = {
 const DEFAULT_COLOR   = "#ffffff";
 const DEFAULT_OPACITY = 0.92;
 
+// ── Debounced save ─────────────────────────────────────────────────────────────
+let _saveTimer = null;
+
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveCurrentNote, 400);
+}
+
 // ── Color helpers ──────────────────────────────────────────────────────────────
 function hexToRgb(hex) {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -250,7 +258,8 @@ async function restore() {
 
 // ── Event wiring ───────────────────────────────────────────────────────────────
 function attachEvents() {
-  note.oninput = () => saveCurrentNote();
+  // Debounced save on each keystroke
+  note.oninput = scheduleSave;
 
   note.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleEnterInList(e);
@@ -286,19 +295,13 @@ function attachEvents() {
   // Settings panel toggle
   settingsToggle.onclick = () => settingsPanel.classList.toggle("open");
 
-  settingsPanel.addEventListener("click", (e) => {
-    const toggle = e.target.closest(".settings-section-toggle");
-    if (!toggle) return;
-    const section = toggle.closest(".settings-section");
-    if (!section) return;
-    section.classList.toggle("collapsed");
-    toggle.setAttribute("aria-expanded", String(!section.classList.contains("collapsed")));
-  });
-
   // Close button
   closeNoteBtn.onclick = () => {
-    const win = getCurrentWindow();
-    if (win?.close) win.close();
+    clearTimeout(_saveTimer);
+    saveCurrentNote().finally(() => {
+      const win = getCurrentWindow();
+      if (win?.close) win.close();
+    });
   };
 
   // New note
@@ -319,7 +322,6 @@ function attachEvents() {
         note.focus();
         document.execCommand("insertText", false, "🐑");
         saveCurrentNote();
-        // Bounce the button
         overviewBtn.style.transition = "transform 0.15s ease";
         overviewBtn.style.transform  = "scale(1.4)";
         setTimeout(() => { overviewBtn.style.transform = "scale(1)"; }, 150);
@@ -348,7 +350,6 @@ function attachEvents() {
       noteTitleEl.textContent = newTitle;
       await invoke("rename_note", { id: noteId, title: newTitle });
     });
-    // Prevent drag from firing when clicking on title
     noteTitleEl.addEventListener("mousedown", (e) => e.stopPropagation());
   }
 

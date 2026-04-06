@@ -1,90 +1,9 @@
 const { invoke } = window.__TAURI__.core;
 
-// ── Load and render note list ──────────────────────────────────────────────────
+const noteList = document.getElementById("note-list");
+const footer   = document.getElementById("footer");
 
-async function loadNotes() {
-  const notes = await invoke("get_notes_info");
-  const list = document.getElementById("note-list");
-  const footer = document.getElementById("footer");
-
-  if (!notes.length) {
-    list.innerHTML = '<p class="empty-msg">No memos yet — click + New memo to start</p>';
-    footer.textContent = "0 memos";
-    return;
-  }
-
-  footer.textContent = `${notes.length} memo${notes.length === 1 ? "" : "s"}`;
-
-  list.innerHTML = notes
-    .map((n) => renderRow(n))
-    .join("");
-
-  // Attach events after rendering
-  notes.forEach((n) => {
-    const row = document.querySelector(`.note-row[data-label="${CSS.escape(n.label)}"]`);
-    if (!row) return;
-
-    const titleField = row.querySelector(".note-title-field");
-    const visBtn = row.querySelector(".btn-visibility");
-    const delBtn = row.querySelector(".btn-delete");
-
-    // Focus note on title click (only when visible)
-    titleField.addEventListener("click", () => {
-      if (n.visible) invoke("focus_note", { label: n.label });
-    });
-
-    // Rename on blur / Enter
-    titleField.addEventListener("blur", () => commitRename(n.label, titleField));
-    titleField.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); titleField.blur(); }
-      if (e.key === "Escape") { titleField.textContent = n.title; titleField.blur(); }
-    });
-
-    // Toggle visibility
-    visBtn.addEventListener("click", async () => {
-      await invoke("toggle_note_visibility", { label: n.label });
-      await loadNotes();
-    });
-
-    // Delete with confirmation
-    delBtn.addEventListener("click", async () => {
-      if (confirm(`Delete "${n.title}"? This cannot be undone.`)) {
-        await invoke("delete_note", { label: n.label });
-        await loadNotes();
-      }
-    });
-  });
-}
-
-function renderRow(n) {
-  const hidden = !n.visible;
-  // 👁 = show on desktop (currently hidden), 🙈 = hide from desktop (currently visible)
-  const visIcon = hidden ? "&#128065;" : "&#128584;";
-  const visTitle = hidden ? "Show on desktop" : "Hide from desktop";
-
-  return `
-    <div class="note-row ${hidden ? "hidden-note" : ""}" data-label="${escHtml(n.label)}">
-      <span class="dot" title="${hidden ? "hidden" : "visible on desktop"}"></span>
-      <span
-        class="note-title-field"
-        contenteditable="true"
-        spellcheck="false"
-        data-visible="${n.visible}"
-        data-original="${escHtml(n.title)}"
-        title="${hidden ? "hidden" : "click to open"}"
-      >${escHtml(n.title)}</span>
-      <button class="action-btn btn-visibility" title="${visTitle}">${visIcon}</button>
-      <button class="action-btn danger btn-delete" title="Delete memo">&#128465;</button>
-    </div>`;
-}
-
-async function commitRename(label, el) {
-  const newTitle = el.textContent.trim();
-  if (!newTitle) { el.textContent = el.dataset.original || "Untitled"; return; }
-  if (newTitle === el.dataset.original) return;
-  el.dataset.original = newTitle;
-  await invoke("rename_note", { id: label, title: newTitle });
-}
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function escHtml(str) {
   return String(str)
@@ -94,7 +13,92 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-// ── New note button ────────────────────────────────────────────────────────────
+function renderRow(n) {
+  const hidden   = !n.visible;
+  const visIcon  = hidden ? "&#128065;" : "&#128584;";
+  const visTitle = hidden ? "Show on desktop" : "Hide from desktop";
+
+  return `
+    <div class="note-row ${hidden ? "hidden-note" : ""}"
+         data-label="${escHtml(n.label)}"
+         data-visible="${n.visible}">
+      <span class="dot" title="${hidden ? "hidden" : "on desktop"}"></span>
+      <span
+        class="note-title-field"
+        contenteditable="true"
+        spellcheck="false"
+        data-original="${escHtml(n.title)}"
+        title="${hidden ? "hidden" : "click to open"}"
+      >${escHtml(n.title)}</span>
+      <button class="action-btn" data-action="visibility" title="${visTitle}">${visIcon}</button>
+      <button class="action-btn danger" data-action="delete" title="Delete memo permanently">&#215;</button>
+    </div>`;
+}
+
+// ── Load and render ────────────────────────────────────────────────────────────
+
+async function loadNotes() {
+  const notes = await invoke("get_notes_info");
+
+  if (!notes.length) {
+    noteList.innerHTML = '<p class="empty-msg">No memos yet —<br>click + New to create one</p>';
+    footer.textContent = "0 memos";
+    return;
+  }
+
+  footer.textContent = `${notes.length} memo${notes.length !== 1 ? "s" : ""}`;
+  noteList.innerHTML = notes.map(renderRow).join("");
+
+  // Attach rename (blur/keydown) to each title field
+  noteList.querySelectorAll(".note-title-field").forEach((field) => {
+    field.addEventListener("blur",    () => commitRename(field));
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter")  { e.preventDefault(); field.blur(); }
+      if (e.key === "Escape") { field.textContent = field.dataset.original; field.blur(); }
+    });
+    // Click on title of a visible note → focus that note window
+    field.addEventListener("click", () => {
+      const row = field.closest(".note-row");
+      if (row?.dataset.visible === "true") {
+        invoke("focus_note", { label: row.dataset.label });
+      }
+    });
+  });
+}
+
+async function commitRename(field) {
+  const newTitle = field.textContent.trim();
+  if (!newTitle) { field.textContent = field.dataset.original || "minimemo"; return; }
+  if (newTitle === field.dataset.original) return;
+  field.dataset.original = newTitle;
+  const row = field.closest(".note-row");
+  if (row) await invoke("rename_note", { id: row.dataset.label, title: newTitle });
+}
+
+// ── Event delegation for action buttons ───────────────────────────────────────
+
+noteList.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const row = btn.closest(".note-row");
+  if (!row) return;
+  const label  = row.dataset.label;
+  const action = btn.dataset.action;
+
+  if (action === "visibility") {
+    await invoke("toggle_note_visibility", { label });
+    await loadNotes();
+  } else if (action === "delete") {
+    const title = row.querySelector(".note-title-field")?.textContent?.trim() || label;
+    if (confirm(`Delete "${title}"? This cannot be undone.`)) {
+      await invoke("delete_note", { label });
+      await loadNotes();
+    }
+  }
+});
+
+// ── New memo button ────────────────────────────────────────────────────────────
 
 document.getElementById("new-note-btn").addEventListener("click", async () => {
   await invoke("create_new_note");
@@ -102,5 +106,6 @@ document.getElementById("new-note-btn").addEventListener("click", async () => {
 });
 
 // ── Initial load + refresh on focus ───────────────────────────────────────────
+
 loadNotes();
 window.addEventListener("focus", loadNotes);

@@ -6,89 +6,76 @@
 </head>
 <body>
   <div id="toolbar" data-tauri-drag-region>
+    <!-- Left: close + new -->
     <div class="tb-group tb-no-drag">
-      <button id="new-note" title="New memo">+</button>
-      <button id="settings-toggle" title="Settings">&#9881;</button>
+      <button id="close-note" class="tb-no-drag" title="Close memo">&#215;</button>
+      <button id="new-note" title="New memo (⌘N)">+</button>
     </div>
-    <span
-      id="note-title"
-      class="note-title tb-no-drag"
-      contenteditable="true"
-      spellcheck="false"
-      title="Click to rename"
-    >minimemo</span>
-    <div class="toolbar-spacer" data-tauri-drag-region></div>
+
+    <!-- Center: title (drag zone surrounds it) -->
+    <div class="toolbar-spacer" data-tauri-drag-region>
+      <span
+        id="note-title"
+        class="note-title tb-no-drag"
+        contenteditable="true"
+        spellcheck="false"
+        title="Click to rename"
+      >minimemo</span>
+    </div>
+
+    <!-- Right: settings + overview -->
     <div class="tb-group tb-no-drag">
+      <button id="settings-toggle" title="Settings">&#9881;</button>
       <button id="overview-btn" title="Memo overview">
         <img src="images/bok.png" alt="overview" class="header-icon" />
       </button>
-      <button id="close-note" class="tb-no-drag" title="Close memo">&#215;</button>
     </div>
   </div>
 
+  <!-- Settings panel: flat, no section toggles -->
   <div id="settings-panel">
-    <div class="settings-section collapsed" data-section="appearance">
-      <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">🐑 appearance</span>
-        <span class="settings-section-chevron"></span>
-      </button>
-      <div class="settings-row">
-        <label class="field">
-          <span class="field-label">background</span>
-          <input type="color" id="color-picker" title="Memo color" />
-        </label>
-        <label class="field">
-          <span class="field-label">transparency</span>
-          <input type="range" id="opacity-slider" min="0.3" max="1" step="0.05" />
-        </label>
-      </div>
+    <div class="settings-row">
+      <label class="field">
+        <span class="field-label">background</span>
+        <input type="color" id="color-picker" title="Memo color" />
+      </label>
+      <label class="field">
+        <span class="field-label">transparency</span>
+        <input type="range" id="opacity-slider" min="0.3" max="1" step="0.05" />
+      </label>
+      <label class="field">
+        <span class="field-label">text color</span>
+        <input type="color" id="font-color-picker" />
+      </label>
+      <label class="field">
+        <span class="field-label">font</span>
+        <select id="font-family-picker">
+          <option value="system-ui">System</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Palatino">Palatino</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Caviar Dreams, sans-serif">Caviar Dreams</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Arial">Arial</option>
+          <option value="monospace">Monospace</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">size</span>
+        <select id="font-size-picker">
+          <option value="12">12</option>
+          <option value="14" selected>14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+        </select>
+      </label>
     </div>
-    <div class="settings-section collapsed" data-section="text">
-      <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">🐑 text style</span>
-        <span class="settings-section-chevron"></span>
-      </button>
-      <div class="settings-row">
-        <label class="field">
-          <span class="field-label">color</span>
-          <input type="color" id="font-color-picker" />
-        </label>
-        <label class="field">
-          <span class="field-label">font</span>
-          <select id="font-family-picker">
-            <option value="system-ui">System</option>
-            <option value="Georgia">Georgia</option>
-            <option value="Palatino">Palatino</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Caviar Dreams, sans-serif">Caviar Dreams</option>
-            <option value="Helvetica">Helvetica</option>
-            <option value="Arial">Arial</option>
-            <option value="monospace">Monospace</option>
-          </select>
-        </label>
-        <label class="field">
-          <span class="field-label">size</span>
-          <select id="font-size-picker">
-            <option value="12">12</option>
-            <option value="14" selected>14</option>
-            <option value="16">16</option>
-            <option value="18">18</option>
-            <option value="20">20</option>
-            <option value="24">24</option>
-          </select>
-        </label>
-      </div>
-    </div>
-    <div class="settings-section collapsed" data-section="lists">
-      <button type="button" class="settings-section-toggle" aria-expanded="false">
-        <span class="settings-section-label">🐑 lists</span>
-        <span class="settings-section-chevron"></span>
-      </button>
-      <div class="settings-row">
-        <button type="button" id="insert-bullet-list" class="list-btn" title="Bullet list" aria-label="Bullet list">&#8226; bullet</button>
-        <button type="button" id="insert-numbered-list" class="list-btn" title="Numbered list" aria-label="Numbered list">1. numbered</button>
-        <button type="button" id="insert-checklist" class="list-btn" title="Checklist" aria-label="Checklist">&#9744; checklist</button>
-      </div>
+    <div class="settings-row">
+      <button type="button" id="insert-bullet-list" class="list-btn" title="Bullet list">&#8226; bullet</button>
+      <button type="button" id="insert-numbered-list" class="list-btn" title="Numbered list">1. numbered</button>
+      <button type="button" id="insert-checklist" class="list-btn" title="Checklist">&#9744; checklist</button>
     </div>
   </div>
 
