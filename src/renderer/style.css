@@ -97,26 +97,16 @@ button {
 button:hover  { background: rgba(0, 0, 0, 0.11); color: rgba(0, 0, 0, 0.75); }
 button:active { transform: scale(0.88); }
 
-/* Close button — red tint */
-#close-note {
-  font-size: 14px;
-  background: rgba(255, 89, 78, 0.18);
-  color: rgba(200, 50, 40, 0.65);
-}
-#close-note:hover {
-  background: rgba(255, 59, 48, 0.82);
-  color: #fff;
-}
-
-/* New note button — green tint */
+#close-note,
 #new-note {
   font-size: 14px;
-  background: rgba(40, 200, 70, 0.15);
-  color: rgba(30, 140, 50, 0.7);
+  background: transparent;
+  color: rgba(0, 0, 0, 0.45);
 }
+#close-note:hover,
 #new-note:hover {
-  background: rgba(40, 185, 65, 0.8);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.75);
 }
 
 /* ===== Note title (inline editable) ===== */

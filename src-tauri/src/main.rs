@@ -73,6 +73,37 @@ fn read_windows() -> Vec<WindowEntry> {
         .unwrap_or_default()
 }
 
+/// Plain text from saved HTML; used to hide empty placeholder memos from the overview.
+fn text_from_html(html: &str) -> String {
+    let mut out = String::new();
+    let mut in_tag = false;
+    for c in html.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' => {
+                in_tag = false;
+                continue;
+            }
+            _ if !in_tag => out.push(c),
+            _ => {}
+        }
+    }
+    out
+}
+
+fn is_placeholder_memo(data: &NoteData) -> bool {
+    let title = data
+        .title
+        .as_deref()
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .unwrap_or("minimemo");
+    let default_title = title.eq_ignore_ascii_case("minimemo");
+    let text = text_from_html(data.content.as_deref().unwrap_or(""));
+    let has_text = text.chars().any(|c| !c.is_whitespace());
+    default_title && !has_text
+}
+
 fn write_windows(entries: &[WindowEntry]) {
     fs::write(windows_path(), serde_json::to_string(entries).unwrap_or_default()).ok();
 }
@@ -115,6 +146,9 @@ fn get_notes_info(app: AppHandle) -> Vec<NoteInfo> {
         .filter(|(l, _)| l.as_str() != "main" && l.as_str() != "overview")
         .filter_map(|(label, val)| {
             let data: NoteData = serde_json::from_value(val.clone()).unwrap_or_default();
+            if is_placeholder_memo(&data) {
+                return None;
+            }
             // Show all memos; use "minimemo" as fallback title
             let title = data.title.as_deref()
                 .map(str::trim)
@@ -201,19 +235,24 @@ fn create_new_note(app: AppHandle) {
     create_note_window(&app, None);
 }
 
-#[tauri::command]
-fn open_overview(app: AppHandle) {
+fn ensure_overview_window(app: &AppHandle) -> tauri::Result<()> {
     if let Some(win) = app.get_webview_window("overview") {
         let _ = win.set_focus();
-        return;
+        return Ok(());
     }
-    let _ = WebviewWindowBuilder::new(&app, "overview", WebviewUrl::App("overview.html".into()))
+    WebviewWindowBuilder::new(app, "overview", WebviewUrl::App("overview.html".into()))
         .title("minimemo")
         .inner_size(340.0, 420.0)
         .min_inner_size(260.0, 200.0)
         .decorations(true)
         .resizable(true)
-        .build();
+        .build()?;
+    Ok(())
+}
+
+#[tauri::command]
+fn open_overview(app: AppHandle) {
+    let _ = ensure_overview_window(&app);
 }
 
 // ── Window helpers ─────────────────────────────────────────────────────────────
@@ -323,19 +362,7 @@ fn main() {
             let shortcut = Shortcut::new(Some(Modifiers::SUPER), Code::KeyN);
             app.global_shortcut().register(shortcut)?;
 
-            let store = read_store();
-            let entries = read_windows();
-            let valid: Vec<&WindowEntry> = entries.iter()
-                .filter(|e| store.contains_key(&e.id))
-                .collect();
-
-            if valid.is_empty() {
-                create_note_window(app.handle(), None);
-            } else {
-                for entry in valid {
-                    create_note_window(app.handle(), Some(entry));
-                }
-            }
+            ensure_overview_window(app.handle())?;
 
             if let Some(w) = app.get_webview_window("main") {
                 w.close().ok();

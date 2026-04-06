@@ -14,10 +14,7 @@ function escHtml(str) {
 }
 
 function renderRow(n) {
-  const hidden   = !n.visible;
-  const visIcon  = hidden ? "&#128065;" : "&#128584;";
-  const visTitle = hidden ? "Show on desktop" : "Hide from desktop";
-
+  const hidden = !n.visible;
   return `
     <div class="note-row ${hidden ? "hidden-note" : ""}"
          data-label="${escHtml(n.label)}"
@@ -28,10 +25,9 @@ function renderRow(n) {
         contenteditable="true"
         spellcheck="false"
         data-original="${escHtml(n.title)}"
-        title="${hidden ? "hidden" : "click to open"}"
+        title="${hidden ? "hidden — click to open" : "click to focus memo"}"
       >${escHtml(n.title)}</span>
-      <button class="action-btn" data-action="visibility" title="${visTitle}">${visIcon}</button>
-      <button class="action-btn danger" data-action="delete" title="Delete memo permanently">&#215;</button>
+      <button type="button" class="action-btn danger" data-action="delete" title="Delete memo">&#215;</button>
     </div>`;
 }
 
@@ -49,19 +45,11 @@ async function loadNotes() {
   footer.textContent = `${notes.length} memo${notes.length !== 1 ? "s" : ""}`;
   noteList.innerHTML = notes.map(renderRow).join("");
 
-  // Attach rename (blur/keydown) to each title field
   noteList.querySelectorAll(".note-title-field").forEach((field) => {
     field.addEventListener("blur",    () => commitRename(field));
     field.addEventListener("keydown", (e) => {
       if (e.key === "Enter")  { e.preventDefault(); field.blur(); }
       if (e.key === "Escape") { field.textContent = field.dataset.original; field.blur(); }
-    });
-    // Click on title of a visible note → focus that note window
-    field.addEventListener("click", () => {
-      const row = field.closest(".note-row");
-      if (row?.dataset.visible === "true") {
-        invoke("focus_note", { label: row.dataset.label });
-      }
     });
   });
 }
@@ -75,26 +63,42 @@ async function commitRename(field) {
   if (row) await invoke("rename_note", { id: row.dataset.label, title: newTitle });
 }
 
-// ── Event delegation for action buttons ───────────────────────────────────────
+// ── Row interactions: open / focus / delete ────────────────────────────────────
 
 noteList.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-action]");
-  if (!btn) return;
-
-  const row = btn.closest(".note-row");
-  if (!row) return;
-  const label  = row.dataset.label;
-  const action = btn.dataset.action;
-
-  if (action === "visibility") {
-    await invoke("toggle_note_visibility", { label });
-    await loadNotes();
-  } else if (action === "delete") {
+  const delBtn = e.target.closest("[data-action=\"delete\"]");
+  if (delBtn) {
+    const row = delBtn.closest(".note-row");
+    if (!row) return;
+    const label = row.dataset.label;
     const title = row.querySelector(".note-title-field")?.textContent?.trim() || label;
     if (confirm(`Delete "${title}"? This cannot be undone.`)) {
       await invoke("delete_note", { label });
       await loadNotes();
     }
+    return;
+  }
+
+  const row = e.target.closest(".note-row");
+  if (!row) return;
+  const label = row.dataset.label;
+  const visible = row.dataset.visible === "true";
+
+  if (e.target.closest(".note-title-field")) {
+    if (visible) {
+      await invoke("focus_note", { label });
+    } else {
+      await invoke("toggle_note_visibility", { label });
+      await loadNotes();
+    }
+    return;
+  }
+
+  if (!visible) {
+    await invoke("toggle_note_visibility", { label });
+    await loadNotes();
+  } else {
+    await invoke("focus_note", { label });
   }
 });
 
