@@ -71,8 +71,8 @@ body {
   -webkit-app-region: no-drag;
 }
 
-/* ===== All toolbar buttons ===== */
-button {
+/* ===== Toolbar buttons (scoped so close / new stay transparent) ===== */
+#toolbar button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -86,27 +86,48 @@ button {
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   line-height: 1;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.45);
-  transition: background 0.15s, color 0.15s, transform 0.1s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
   -webkit-app-region: no-drag;
   -webkit-user-select: none;
   user-select: none;
 }
 
-button:hover  { background: rgba(0, 0, 0, 0.11); color: rgba(0, 0, 0, 0.75); }
-button:active { transform: scale(0.88); }
-
-#close-note,
-#new-note {
-  font-size: 14px;
-  background: transparent;
+#toolbar #settings-toggle,
+#toolbar #overview-btn {
+  background: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.45);
 }
-#close-note:hover,
-#new-note:hover {
-  background: rgba(0, 0, 0, 0.08);
+
+#toolbar #settings-toggle:hover,
+#toolbar #overview-btn:hover {
+  background: rgba(0, 0, 0, 0.11);
   color: rgba(0, 0, 0, 0.75);
+}
+
+#toolbar #settings-toggle:active,
+#toolbar #overview-btn:active {
+  transform: scale(0.88);
+}
+
+/* Close and add: no fill, no green/red */
+#toolbar #close-note,
+#toolbar #new-note {
+  font-size: 14px;
+  font-weight: 300;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.42);
+  box-shadow: none;
+}
+
+#toolbar #close-note:hover,
+#toolbar #new-note:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.72);
+}
+
+#toolbar #close-note:active,
+#toolbar #new-note:active {
+  transform: scale(0.88);
 }
 
 /* ===== Note title (inline editable) ===== */
@@ -243,7 +264,14 @@ button:active { transform: scale(0.88); }
 }
 
 /* ===== List insert buttons (pill shape) ===== */
-.list-btn {
+#settings-panel .list-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  line-height: 1;
   border-radius: 10px;
   width: auto;
   min-width: auto;
@@ -253,8 +281,9 @@ button:active { transform: scale(0.88); }
   background: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.5);
   letter-spacing: 0.01em;
+  transition: background 0.15s, color 0.15s;
 }
-.list-btn:hover { background: rgba(0, 0, 0, 0.1); }
+#settings-panel .list-btn:hover { background: rgba(0, 0, 0, 0.1); }
 
 /* ===== Note editor ===== */
 #note {

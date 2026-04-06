@@ -42,17 +42,21 @@
       align-items: center;
       gap: 4px;
       padding: 5px 13px;
-      background: #1c1c1e;
-      color: #fff;
-      border: none;
+      background: transparent;
+      color: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 0, 0, 0.18);
       border-radius: 20px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
     }
-    #new-note-btn:hover  { background: #3a3a3c; }
-    #new-note-btn:active { transform: scale(0.95); }
+    #new-note-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: rgba(0, 0, 0, 0.72);
+      border-color: rgba(0, 0, 0, 0.28);
+    }
+    #new-note-btn:active { transform: scale(0.97); }
 
     /* ── List ── */
     #note-list {
@@ -95,18 +99,18 @@
     .note-row:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.09); }
     .note-row.hidden-note { opacity: 0.55; }
 
-    /* Presence dot */
+    /* Presence dot (neutral, not green) */
     .dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
       flex-shrink: 0;
-      background: #30d158;
-      box-shadow: 0 0 0 2.5px rgba(48, 209, 88, 0.18);
-      transition: background 0.15s;
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+      transition: background 0.15s, box-shadow 0.15s;
     }
     .note-row.hidden-note .dot {
-      background: #c7c7cc;
+      background: rgba(0, 0, 0, 0.15);
       box-shadow: none;
     }
 
@@ -148,7 +152,7 @@
       transition: background 0.12s, color 0.12s;
     }
     .action-btn:hover { background: rgba(0, 0, 0, 0.06); color: #1c1c1e; }
-    .action-btn.danger:hover { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+    .action-btn.danger:hover { background: rgba(0, 0, 0, 0.06); color: #1c1c1e; }
 
     /* ── Footer ── */
     footer {
