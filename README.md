@@ -12,7 +12,7 @@ memos for desktop without ads 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 ## run the app 🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
 
 ```bash
-git clone https://github.com/<your-username>/MemoOS.git && cd MemoOS && npm install && npm start
+npm install && npm start
 ```
 
 🐑🐑🐑 🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑🐑
